@@ -1,0 +1,13 @@
+{
+  "title": "A really important meeting",
+  "start": "2020-10-26 03:00 PM",
+  "end": "2020-10-26 03:30 PM",
+  "topics": [
+      {"person":"Start Buffer", "topic":"", "time": 5},
+      {"person":"Kate", "topic":"Update on that thing", "time": 5},
+      {"person":"Kyle", "topic":"New thing for the thing", "time": 5},
+      {"person":"All", "topic":"Open Discussion", "time": 10},
+      {"person":"Summary and Actions", "topic":"Discussion", "time": 5}
+  ],
+  "background":"0047bb"
+}

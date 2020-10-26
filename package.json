@@ -1,0 +1,10 @@
+{
+    "name": "node-ejs",
+    "main": "app.js",
+    "dependencies": {
+        "after-load": "^1.0.4",
+        "date-and-time": "*",
+        "ejs": "^1.0.0",
+        "express": "^4.6.1"
+    }
+}
