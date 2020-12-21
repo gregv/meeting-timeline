@@ -42,9 +42,24 @@ I worked on this on-and-off for a bit, but something was still missing, I wasn't
 # Setup
 ## Prework
 You need to follow these instructions from [ohnboiles/obs-mac-virtualcam](https://github.com/johnboiles/obs-mac-virtualcam#installing), I've broken out these steps below:
-1. [Download OBS for Mac](https://obsproject.com/download) - I used v25.0.8
-2. Download the [Virtual Cam plugin](https://github.com/johnboiles/obs-mac-virtualcam/releases) for OBS
-3. For MS Teams, [remove the signature](https://github.com/johnboiles/obs-mac-virtualcam/issues/171) from the application so the Virtual Camera will show up
+1. [Download OBS for Mac](https://obsproject.com/download) - use v26.1 to get Virtual Camera built in (no extra extension needed)
+2. For MS Teams, [remove the signature](https://obsproject.com/forum/threads/fyi-macos-virtual-cam-on-obs-26-1.135468/) from the application so the Virtual Camera will show up
+```
+# everything executed with sudo
+
+codesign --remove-signature "/Applications/Skype.app"
+codesign --remove-signature "/Applications/Skype.app/Contents/Frameworks/Skype Helper (Renderer).app"
+codesign --remove-signature "/Applications/Skype.app/Contents/Frameworks/Skype Helper (GPU).app"
+codesign --remove-signature "/Applications/Skype.app/Contents/Frameworks/Skype Helper (Plugin).app"
+codesign --remove-signature "/Applications/Skype.app/Contents/Frameworks/Skype Helper.app"
+
+codesign --remove-signature "/Applications/Microsoft Teams.app"
+codesign --remove-signature "/Applications/Microsoft Teams.app/Contents/Frameworks/Microsoft Teams Helper.app"
+codesign --remove-signature "/Applications/Microsoft Teams.app/Contents/Frameworks/Microsoft Teams Helper (GPU).app"
+codesign --remove-signature "/Applications/Microsoft Teams.app/Contents/Frameworks/Microsoft Teams Helper (Plugin).app"
+codesign --remove-signature "/Applications/Microsoft Teams.app/Contents/Frameworks/Microsoft Teams Helper (Renderer).app"
+```
+
 
 ## Setup OBS
 Once you have everything installed, you will need to configure OBS as such:
