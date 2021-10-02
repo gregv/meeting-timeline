@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Meeting Timeline - turn your meetings into a SpaceX Launch!">
+    <meta name="author" content="Greg Vanoni">
+
+    <title>Meeting Timeline - Edit</title>
+    <% include meeting_header %>
+  </head>
+  <body class="bg-light">
+
+<div class="container">
+  <main>
+    <div class="py-5 text-center">
+      <h4>Editing Meeting Timeline <%= id %></h4>
+      <a class="btn btn-secondary btn-sm" href="/meeting/"><img src="/images/house.svg" alt="Go back to home"/> Home</a>
+      <a class="btn btn-secondary btn-sm" href="/meeting/<%= id %>"><img src="/images/eye.svg" alt="View the published timeline"/> View</a>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-12 col-lg-12">
+        <form action="/meeting/<%= id %>" method="POST">
+        <input type="hidden" name="meeting_id" value="<%= id %>"/>
+
+        <h4 class="mb-3">Editing Meeting Details</h4>
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label for="title" class="form-label">Meeting Title</label>
+              <input type="text" name="title" class="form-control" id="title" placeholder="" value="<%= meeting.title %>" required>
+              <div class="invalid-feedback">
+                Valid meeting title name is required.
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <!-- https://codepen.io/johnfinkdesign/pen/NRyBZb?editors=1111 -->
+              <label for="start" class="form-label">Start Time</label>
+              <div class="form-group" id="start">
+                <div class="input-group time timepicker">
+                  <input name="start_time" class="form-control" value="<%= meeting.start_time %>"><span class="input-group-append input-group-addon"><span class="input-group-text"><i class="fa fa-clock"></i></span></span>
+                </div>
+              </div>
+              <div class="invalid-feedback">
+                Please select a valid start time.
+              </div>
+            </div>
+
+
+            <div class="col-md-5">
+              <label for="timezone" class="form-label">Timezone</label>
+              <select class="form-control" name="timezone" id="timezone" required>
+                <option value="<%= meeting.timezone %>"><%= meeting.timezone %></option>
+                <%  all_timezones.forEach(function(tz,index) { %>
+                  <option><%= tz %></option>
+                <% }); %>
+
+              </select>
+              <div class="invalid-feedback">
+                Please select a valid timezone.
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              <label for="background" class="form-label">Background Color</label>
+              <button class="btn btn-lg" id="color_display" type="button" style="background-color:<%= meeting.background %>"></button>
+              <input type="text" id="background" name="background" class="form-control" value="<%= meeting.background %>" required/>
+
+              <div class="invalid-feedback">
+                Please select a valid backgroud color.
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              <label for="icon" class="form-label">Icon</label>
+
+              <div class="form-check">
+              <input class="form-check-input" type="radio" name="icon" id="icon" value="cat.png"
+                <% if( meeting.icon == null || meeting.icon == "cat.png"){ %>checked<%}%>>
+              <label class="form-check-label" for="icon">
+                Cat <img src="/images/cat.png" width="30px">
+              </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="icon" id="icon2" value="pp.png"
+                <% if(meeting.icon == "pp.png"){ %>checked<%}%>>
+                <label class="form-check-label" for="icon2">
+                  PayPal Logo <img src="/images/pp.png" width="30px">
+                </label>
+              </div>
+
+              <div class="invalid-feedback">
+                Please select a valid icon
+              </div>
+            </div>
+
+          </div>
+
+          <hr class="my-4">
+
+          <h4 class="mb-3">Meeting Agenda</h4>
+          <h6 class="text-muted">Specify who is speaking, about what, and for how long</h6>
+
+
+          <div class="row gy-3">
+
+            <div class="col-md-4">
+              <label for="person1" class="form-label">Person</label>
+              <input type="text" class="form-control" id="person1" placeholder="Pam">
+
+              <div class="invalid-feedback">
+                Person is required
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              <label for="topic1" class="form-label">Topic</label>
+              <input type="text" class="form-control" id="topic1" placeholder="Pamb with a b?">
+              <div class="invalid-feedback">
+                Topic is required
+              </div>
+            </div>
+
+            <div class="col-md-2">
+              <label for="duration1" class="form-label">Duration</label>
+              <input type="number" class="form-control" id="duration1" placeholder="5">
+              <div class="invalid-feedback">
+                Duration required
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <button id="add" class="btn btn-warning add-more" type="button">Add</button>
+            </div>
+
+          </div>
+
+          <hr class="my-4">
+
+
+          <!-- This is where the Javascript code in create_meeting.js will add new form elements-->
+          <h6 class="text-muted">Click and drag an item below to reorder</h6>
+          <ul class="list-group" id="demo1">
+            <template id="meetingItemTemplate">
+              <li class="list-group-item" name="field" type="text">
+                <div class="input-group mb-2 mr-sm-2">
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Person</div>
+                  </div>
+                  <input type="text" class="form-control col-sm-2" name="person" value="{person}">
+
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Topic</div>
+                  </div>
+                  <input type="text" class="form-control" name="topic" value="{topic}">
+
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Duration</div>
+                  </div>
+                  <input type="number" class="form-control col-md-2" name="duration" value="{duration}">
+
+                  <button class="btn btn-outline-secondary remove-me" type="button"><img src="/images/trash.svg"/></button>
+                </div>
+              </li>
+            </template>
+
+            <% if (Array.isArray(meeting.person)) { %>
+            <%  meeting.person.forEach(function(person,index) { %>
+              <li class="list-group-item" name="field" type="text">
+                <div class="input-group mb-2 mr-sm-2">
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Person</div>
+                  </div>
+                  <input type="text" class="form-control col-sm-2" name="person" value="<%= person %>">
+
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Topic</div>
+                  </div>
+                  <input type="text" class="form-control" name="topic" value="<%= meeting.topic[index] %>">
+
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Duration</div>
+                  </div>
+                  <input type="number" class="form-control col-md-2" name="duration" value="<%= meeting.duration[index] %>">
+
+                  <button class="btn btn-outline-secondary remove-me" type="button"><img src="/images/trash.svg"/></button>
+                </div>
+              </li>
+            <% }); %>
+            <% } else { %>
+              <li class="list-group-item" name="field" type="text">
+                <div class="input-group mb-2 mr-sm-2">
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Person</div>
+                  </div>
+                  <input type="text" class="form-control col-sm-2" name="person" value="<%= meeting.person %>">
+
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Topic</div>
+                  </div>
+                  <input type="text" class="form-control" name="topic" value="<%= meeting.topic %>">
+
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Duration</div>
+                  </div>
+                  <input type="number" class="form-control col-md-2" name="duration" value="<%= meeting.duration %>">
+
+                  <button class="btn btn-outline-secondary remove-me" type="button"><img src="/images/trash.svg"/></button>
+                </div>
+              </li>
+            <% } %>
+
+          </ul>
+          <hr class="my-4">
+          <button class="w-100 btn btn-warning btn-lg" type="submit">Save</button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+
+  <% include meeting_footer %>
+
+  </body>
+</html>

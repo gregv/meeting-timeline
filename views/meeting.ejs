@@ -1,0 +1,429 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Meeting Timeline</title>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.1/css/all.min.css" rel="stylesheet">
+  <style>
+    html body {
+        background-color: #<%= background %>;
+    }
+  </style>
+</head>
+<script src="/js/pixi.min.js"></script>
+<script type="text/javascript" src="https://momentjs.com/downloads/moment.min.js"></script>
+
+<body id="timeline" bgcolor="#<%= background %>">
+  <div style="margin-bottom:50px">
+    <a class="btn btn-secondary btn-sm" href="/meeting/"><img src="/images/house.svg" alt="Go back to home"/> Home</a>
+    <a class="btn btn-secondary btn-sm" href="/meeting/edit/<%= id %>"><img src="/images/pencil-square.svg" alt="Edit"/> Edit</a>
+  </div>
+
+  <script type="text/javascript">
+    let type = "WebGL"
+    if(!PIXI.utils.isWebGLSupported()){
+      type = "canvas"
+    }
+
+    PIXI.utils.sayHello(type)
+
+    //Create a Pixi Application
+    let app = new PIXI.Application({
+        width: 1000,
+        height: 256,
+        antialias: true,
+        transparent: false,
+        resolution: 1
+      }
+    );
+    app.renderer.backgroundColor = "0x<%= background %>";
+
+    //Add the canvas that Pixi automatically created for you to the HTML document
+    document.body.appendChild(app.view);
+
+    //load an image and run the `setup` function when it's done
+    PIXI.loader
+      .add("/images/<%= icon %>")
+      .load(setup);
+
+    let cat, state, line, circle;
+    let verticalLine;
+    let boxList = [];
+    let timeText;
+
+
+    let x_shift = 30;
+    let y_shift = 60;
+
+    let Container = PIXI.Container;
+    let Graphics =  PIXI.Graphics;
+    let Text = PIXI.Text;
+    let TextStyle = PIXI.TextStyle;
+
+
+    //This `setup` function will run when the image has loaded
+    function setup() {
+      gameScene = new Container();
+      app.stage.addChild(gameScene);
+
+
+
+    let titleStyle = new TextStyle({
+      fontFamily: "Arial",
+      fontSize: 31,
+      fill: "black",
+      stroke: '#EEEEEE',
+      strokeThickness: 4,
+      dropShadow: true,
+      dropShadowColor: "#000000",
+      dropShadowBlur: 1,
+      dropShadowAngle: Math.PI / 4,
+      dropShadowDistance: 5,
+    });
+
+    let personStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 18,
+    fill: "black",
+    stroke: '#C0C0C0',
+    strokeThickness: 1,
+    dropShadow: false,
+    dropShadowColor: "#000000",
+    dropShadowBlur: 4,
+    dropShadowAngle: Math.PI / 6,
+    dropShadowDistance: 6,
+    });
+
+    let topicStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 12,
+    fill: "black",
+    stroke: '#EEEEEE',
+    strokeThickness: 1
+    });
+
+    let timeStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 15,
+    fill: "black",
+    stroke: '#FFFFFF',
+    strokeThickness: 1,
+    dropShadow: false,
+    dropShadowColor: "#000000",
+    dropShadowBlur: 4,
+    dropShadowAngle: Math.PI / 2,
+    dropShadowDistance: 1,
+    });
+
+    let clockStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 25,
+    fill: "red",
+    stroke: '#FFFFFF',
+    strokeThickness: 1,
+    dropShadow: false,
+    dropShadowColor: "#000000",
+    dropShadowBlur: 4,
+    dropShadowAngle: Math.PI / 6,
+    dropShadowDistance: 6,
+    });
+
+
+
+    // Add Title near bottom of window
+    let message = new Text("<%= title %>", titleStyle);
+    message.y = 210;
+    message.x = x_shift;
+    app.stage.addChild(message);
+
+    line = new Graphics();
+    line.lineStyle(2, 0x666666, 1);
+    line.moveTo(0, 0);
+
+    line.lineTo(app.screen.width, 0);
+    line.x = 0 + x_shift - 5 ;
+    line.y = 25 + y_shift;
+    app.stage.addChild(line);
+
+
+    // Add the boxes and text descriptions
+    <%  topics.forEach(function(topic,index) { %>
+      // Person and Topic Block
+      var messageB = new Text("<%= topic.person %>", personStyle);
+      messageB.y = 55 + y_shift;
+      messageB.x = <%= topic.location %> + x_shift;
+      app.stage.addChild(messageB);
+
+      var messageB = new Text("<%= topic.topic %>", topicStyle);
+      messageB.y = 75 + y_shift;
+      messageB.x = <%= topic.location %> + x_shift;
+      app.stage.addChild(messageB);
+
+      var timeSlot = new Text(moment("<%= topic.startTime %>").format("hh:mm A"), timeStyle);
+      timeSlot.y = 93 + y_shift;
+      timeSlot.x = <%= topic.location %> + x_shift;
+      app.stage.addChild(timeSlot);
+
+
+      var roundBoxA = new Graphics();
+      roundBoxA.lineStyle(4, 0x99CCFF, 1);
+      roundBoxA.beginFill(0xFF9933);
+      roundBoxA.drawRoundedRect(0, 0, <%= topic.width %>, 50, 10)
+      roundBoxA.endFill();
+      <%  if (topic.id == 0){ %>
+        roundBoxA.x = <%= topic.location %> + x_shift;
+      <% } else { %>
+        roundBoxA.x = <%= topic.location %> + x_shift;
+      <% } %>
+      roundBoxA.y = y_shift;
+      app.stage.addChild(roundBoxA);
+
+      // Keep track of these for collision detection later
+      boxList.push(roundBoxA);
+    <% }); %>
+
+
+    timeText = new Text("Time", clockStyle);
+    timeText.y = 170;
+    timeText.x = 5;
+    app.stage.addChild(timeText);
+
+    verticalLine = new Graphics();
+    verticalLine.lineStyle(5, 0xFFFF00, 1);
+    verticalLine.moveTo(0, 0);
+    verticalLine.lineTo(0, 63);
+    verticalLine.y = 50;
+    app.stage.addChild(verticalLine);
+
+    // Create the cat sprite
+    // Do this last so it will be on top
+    cat = new PIXI.Sprite(PIXI.loader.resources["/images/<%= icon %>"].texture);
+    cat.y = 0;
+    cat.vx = 0;
+    cat.vy = 0;
+    app.stage.addChild(cat);
+
+
+
+    // Start the ticker
+    state = play;
+
+
+      //Start the game loop
+      app.ticker.add(delta => gameLoop(delta));
+    }
+
+    // The delta value represents the amount of fractional lag between frames. You can optionally
+    //   add it to the cat's position, to make the cat's animation independent of the frame rate.
+
+    function gameLoop(delta){
+      state(delta);
+    }
+
+    let counter = 0;
+    var touchedItems = new Set();
+    function play(delta){
+
+     // Light up a box when we are touching it
+
+     boxList.forEach((item, i) => {
+       if( hitTestRectangle(verticalLine, item, counter) )
+       {
+         if( pastMiddle(verticalLine, item) )
+         {
+           if( pastTwoThirds(verticalLine, item) )
+           {
+             // Two Thirds
+             if( counter % 10 == 0 ) // Blink
+             {
+                item.tint = 0xFFB6C1; // Pink
+             }
+             else
+             {
+               item.tint = 0xff0000; // Red
+             }
+
+           }
+           else
+           {
+              // Middle
+              item.tint = 0xFFA500; // Orange
+           }
+         }
+         else
+         {
+            // Before middle
+            item.tint = 0xFFFF00; // Yellow
+         }
+
+         touchedItems.add(item);
+
+
+       }
+       else {
+         // if( touchedItems.has(item) )
+         if( completelyPassed(verticalLine, item) )
+         {
+           // Visited
+           item.tint = 0x999999; // Gray
+         }
+         else
+         {
+           // Unvisited
+          item.tint = 0xccff99; // Green
+         }
+       }
+
+     });
+
+
+      if(counter % 10 == 0)
+      {
+        var currentdate = new Date();
+
+        var startTime = new Date("<%= start %>");
+
+        // Take milliseconds and /1000 to get seconds
+        var timeAfterStart = Math.round((currentdate-startTime)/1000,1);
+        var markerLoction = timeAfterStart/<%= movement_rate %>;
+        cat.x = markerLoction;
+        verticalLine.x = markerLoction + 64/2; // 64 is the width of the image
+        timeText.x = markerLoction;
+
+        timeText.text = moment(currentdate).format("hh:mm:ss A");
+      }
+
+      counter++;
+    }
+
+
+    function pastMiddle(r1, r2)
+    {
+      //Define the variables we'll need to calculate
+      let combinedHalfWidths, vx;
+
+      //Find the center points of each sprite
+      r1.centerX = r1.x + r1.width / 2;
+      r2.centerX = r2.x + r2.width / 2;
+
+      //Find the half-widths and half-heights of each sprite
+      r1.halfWidth = r1.width / 2;
+      r2.halfWidth = r2.width / 2;
+
+      //Calculate the distance vector between the sprites
+      vx = r1.centerX - r2.centerX;
+
+      if(vx > 0)
+      {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+
+    function pastTwoThirds(line, item)
+    {
+      //Define the variables we'll need to calculate
+      let combinedHalfWidths, vx;
+
+      //Find the center points of each sprite
+      line.centerX = line.x + line.width / 2;
+      item.centerX = (item.x + item.width / 2) + (item.width / 3);
+
+
+      //Calculate the distance vector between the sprites
+      vx = line.centerX - item.centerX;
+
+      if(vx > 0)
+      {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+
+    function completelyPassed(line, item)
+    {
+      //Define the variables we'll need to calculate
+      let vx;
+
+      //Find the center points of each sprite
+      line.centerX = line.x + line.width / 2;
+      item.centerX = item.x + item.width;
+
+
+      //Calculate the distance vector between the sprites
+      vx = line.centerX - item.centerX;
+
+      if(vx > 0)
+      {
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+
+
+    function hitTestRectangle(r1, r2, counter) {
+
+    //Define the variables we'll need to calculate
+    let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+
+    //hit will determine whether there's a collision
+    hit = false;
+
+    //Find the center points of each sprite
+    r1.centerX = r1.x + r1.width / 2;
+    r1.centerY = r1.y + r1.height / 2;
+    r2.centerX = r2.x + r2.width / 2;
+    r2.centerY = r2.y + r2.height / 2;
+
+    //Find the half-widths and half-heights of each sprite
+    r1.halfWidth = r1.width / 2;
+    r1.halfHeight = r1.height / 2;
+    r2.halfWidth = r2.width / 2;
+    r2.halfHeight = r2.height / 2;
+
+    //Calculate the distance vector between the sprites
+    vx = r1.centerX - r2.centerX;
+    vy = r1.centerY - r2.centerY;
+
+
+
+    //Figure out the combined half-widths and half-heights
+    combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+    combinedHalfHeights = r1.halfHeight + r2.halfHeight;
+
+    //Check for a collision on the x axis
+    if (Math.abs(vx) < combinedHalfWidths) {
+
+      //A collision might be occurring. Check for a collision on the y axis
+      if (Math.abs(vy) < combinedHalfHeights) {
+
+        //There's definitely a collision happening
+        hit = true;
+      } else {
+
+        //There's no collision on the y axis
+        hit = false;
+      }
+    } else {
+
+      //There's no collision on the x axis
+      hit = false;
+    }
+
+    //`hit` will be either `true` or `false`
+    return hit;
+  }
+
+  </script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js">
+  </script>
+</body>
+</html>

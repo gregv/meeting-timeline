@@ -1,13 +1,16 @@
 {
-  "title": "A really important meeting",
-  "start": "2020-10-26 03:00 PM",
-  "end": "2020-10-26 03:30 PM",
+  "title": "Innovation Week Demo!🙌",
+  "start": "2020-12-21 12:00 PM",
+  "end": "2020-12-21 01:00 PM",
   "topics": [
-      {"person":"Start Buffer", "topic":"", "time": 5},
-      {"person":"Kate", "topic":"Update on that thing", "time": 5},
-      {"person":"Kyle", "topic":"New thing for the thing", "time": 5},
-      {"person":"All", "topic":"Open Discussion", "time": 10},
-      {"person":"Summary and Actions", "topic":"Discussion", "time": 5}
+      {"person":"Yifan/Haiou", "topic":"SNOW Similarity with BERT", "time": 10},
+      {"person":"Buffer", "topic":"", "time": 5},
+      {"person":"Emese", "topic":"PingPong+SignalFX", "time": 10},
+      {"person":"Buffer", "topic":"", "time": 5},
+      {"person":"eSRE", "topic":"Documentation++", "time": 10},
+      {"person":"Buffer", "topic":"", "time": 5},
+      {"person":"Dylan", "topic":"tl;dr Summary w/ Pegasus", "time": 10},
+      {"person":"Greg", "topic":"The Bridge + Idea Portal", "time": 5}
   ],
   "background":"0047bb"
 }

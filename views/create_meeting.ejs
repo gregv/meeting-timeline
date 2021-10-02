@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Meeting Timeline - turn your meetings into a SpaceX Launch!">
+    <meta name="author" content="Greg Vanoni">
+
+    <title>Meeting Timeline - Home</title>
+    <% include meeting_header %>
+  </head>
+  <body class="bg-light">
+
+<div class="container">
+  <main>
+    <div class="py-5 text-center">
+      <img class="d-block mx-auto mb-4" src="https://github.com/gregv/meeting-timeline/raw/main/screenshots/spacex_concept.png" alt="" width="500">
+      <h2>Meeting Timeline</h2>
+      <p class="lead">Meeting ID: <%= id %></p>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-5 col-lg-4 order-md-last">
+        <h4 class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-muted">Recent timelines</span>
+          <span class="badge bg-primary rounded-pill"><span id="num_meetings">0</span></span>
+        </h4>
+
+        <ul class="list-group mb-3">
+          <template id="meetingListTemplate">
+            <li class="list-group-item d-flex justify-content-between lh-sm">
+              <div>
+                <h6 class="my-0"><a href="/meeting/{id}">{title}</a></h6>
+
+                <small class="text-muted">{num_topics} topic{s}</small>
+                -
+                <small class="text-muted">{duration} mins</small>
+                <p>
+                  <small class="text-muted">Starts at {start_time}</small>
+                </p>
+              </div>
+
+              <small class="text-muted">{id}</small>
+              <small>
+              <a class="btn btn-sm" href="/meeting/{id}"><img src="/images/eye.svg" alt="View the published timeline"/></a>
+              <br>
+              <a class="btn btn-sm" href="/meeting/edit/{id}"><img src="/images/pencil-square.svg" alt="Edit"/></a>
+              </small>
+
+            </li>
+          </template>
+
+          <!-- Below #meeting_list will be populated by an Ajax call to get data from Redis -->
+          <div id="meeting_list"></div>
+
+
+          <li class="list-group-item d-flex justify-content-between">
+              <small class="text-muted"><span id="num_minutes">0</span> total minutes
+                with <span id="num_topics">0</span> topics
+              </small>
+          </li>
+        </ul>
+      </div>
+
+
+      <div class="col-md-7 col-lg-8">
+        <form action="/meeting/<%= id %>" method="POST">
+        <input type="hidden" name="meeting_id" value="<%= id %>"/>
+
+        <h4 class="mb-3">Meeting Details</h4>
+          <div class="row g-3">
+
+            <div class="col-12">
+              <label for="title" class="form-label">Meeting Title</label>
+              <input type="text" name="title" class="form-control" id="title" placeholder="" value="" required>
+              <div class="invalid-feedback">
+                Valid meeting title name is required.
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <!-- https://codepen.io/johnfinkdesign/pen/NRyBZb?editors=1111 -->
+              <label for="start" class="form-label">Start Time</label>
+              <div class="form-group" id="start">
+                <div class="input-group time timepicker">
+                  <input name="start_time" class="form-control" placeholder="HH:MM AM/PM"><span class="input-group-append input-group-addon"><span class="input-group-text"><i class="fa fa-clock"></i></span></span>
+                </div>
+              </div>
+              <div class="invalid-feedback">
+                Please select a valid start time.
+              </div>
+            </div>
+
+
+            <div class="col-md-5">
+              <label for="timezone" class="form-label">Timezone</label>
+              <select class="form-control" name="timezone" id="timezone" required>                
+                <%  all_timezones.forEach(function(tz,index) { %>
+                  <option><%= tz %></option>
+                <% }); %>
+
+              </select>
+              <div class="invalid-feedback">
+                Please select a valid timezone.
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              <label for="background" class="form-label">Background Color</label>
+              <button class="btn btn-lg" id="color_display" type="button" style="background-color:#0047bb"></button>
+              <input type="text" id="background" name="background" class="form-control" value="#0047BB" required/>
+              <div class="invalid-feedback">
+                Please select a valid background color.
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              <label for="icon" class="form-label">Icon</label>
+
+              <div class="form-check">
+              <input class="form-check-input" type="radio" name="icon" id="icon" value="cat.png" checked>
+              <label class="form-check-label" for="icon">
+                Cat <img src="/images/cat.png" width="30px">
+              </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="icon" id="icon2" value="pp.png">
+                <label class="form-check-label" for="icon2">
+                  PayPal Logo <img src="/images/pp.png" width="30px">
+                </label>
+              </div>
+
+              <div class="invalid-feedback">
+                Please select a valid icon
+              </div>
+            </div>
+
+          </div>
+
+
+          <hr class="my-4">
+
+          <h4 class="mb-3">Meeting Agenda</h4>
+          <h6 class="text-muted">Specify who is speaking, about what, and for how long</h6>
+
+
+          <div class="row gy-3">
+
+            <div class="col-md-4">
+              <label for="person1" class="form-label">Person</label>
+              <input type="text" class="form-control" id="person1" placeholder="Pam" required>
+
+              <div class="invalid-feedback">
+                Person is required
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              <label for="topic1" class="form-label">Topic</label>
+              <input type="text" class="form-control" id="topic1" placeholder="Pamb with a b?" required>
+              <div class="invalid-feedback">
+                Topic is required
+              </div>
+            </div>
+
+            <div class="col-md-2">
+              <label for="duration1" class="form-label">Duration</label>
+              <input type="number" class="form-control" id="duration1" placeholder="5" required>
+              <div class="invalid-feedback">
+                Duration required
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <button id="add" class="btn btn-primary add-more" type="button">Add</button>
+            </div>
+
+          </div>
+
+          <hr class="my-4">
+
+
+          <!-- This is where the Javascript code in create_meeting.js will add new form elements when someone clicks the "Add" button -->
+          <ul class="list-group" id="demo1">
+            <template id="meetingItemTemplate">
+              <li class="list-group-item" name="field" type="text">
+                <div class="input-group mb-2 mr-sm-2">
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Person</div>
+                  </div>
+                  <input type="text" class="form-control col-sm-2" name="person" value="{person}">
+
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Topic</div>
+                  </div>
+                  <input type="text" class="form-control" name="topic" value="{topic}">
+
+                  <div class="input-group-prepend">
+                    <div class="input-group-text">Duration</div>
+                  </div>
+                  <input type="number" class="form-control col-md-2" name="duration" value="{duration}">
+
+                  <button class="btn btn-outline-secondary remove-me" type="button"><img src="/images/trash.svg"/></button>
+                </div>
+              </li>
+            </template>
+
+          </ul>
+
+          <button class="w-100 btn btn-primary btn-lg" type="submit">Generate My Meeting Timeline!</button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+
+  <% include meeting_footer %>
+  <script src="/js/create_meeting.js"></script>
+
+  </body>
+</html>
