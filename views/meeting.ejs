@@ -1,429 +1,820 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Meeting Timeline</title>
-
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.1/css/all.min.css" rel="stylesheet">
-  <style>
-    html body {
-        background-color: #<%= background %>;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/8.4.1/pixi.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js"></script>
 </head>
-<script src="/js/pixi.min.js"></script>
-<script type="text/javascript" src="https://momentjs.com/downloads/moment.min.js"></script>
+<body style="margin: 0; padding: 0; background-color: #<%= background %>; overflow: hidden;">
 
-<body id="timeline" bgcolor="#<%= background %>">
-  <div style="margin-bottom:50px">
-    <a class="btn btn-secondary btn-sm" href="/meeting/"><img src="/images/house.svg" alt="Go back to home"/> Home</a>
-    <a class="btn btn-secondary btn-sm" href="/meeting/edit/<%= id %>"><img src="/images/pencil-square.svg" alt="Edit"/> Edit</a>
+  <div id="controls" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
+    <button id="zoomIn" style="font-size: 18px; margin: 0 5px; padding: 5px 10px; cursor: pointer;">+</button>
+    <button id="zoomOut" style="font-size: 18px; margin: 0 5px; padding: 5px 10px; cursor: pointer;">-</button>
+    <button id="resetView" style="font-size: 18px; margin: 0 5px; padding: 5px 10px; cursor: pointer;">Reset</button>
   </div>
 
-  <script type="text/javascript">
-    let type = "WebGL"
-    if(!PIXI.utils.isWebGLSupported()){
-      type = "canvas"
+  <div id="debug" style="position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.7); color: white; padding: 10px; font-family: monospace; font-size: 12px; max-width: 300px; display: <%= config.showDebug ? 'block' : 'none' %>;">
+    <div>Debug Info:</div>
+    <div id="debugContent"></div>
+  </div>
+
+  <script>
+    // Server-side data passed to the client
+    const meetingData = {
+      title: "<%= title %>",
+      start: "<%= start %>",
+      background: "0x<%= background %>",
+      movement_rate: <%= movement_rate %>,
+      icon: "<%= icon %>",
+      topics: <%- JSON.stringify(topics) %>,
+      config: <%- JSON.stringify(config) %>
+    };
+
+    console.log("Raw meeting data:", meetingData);
+    
+    // Debug timezone handling
+    const debugDiv = document.getElementById('debugContent');
+    function addDebug(text) {
+      console.log(text);
+      debugDiv.innerHTML += text + '<br>';
     }
-
-    PIXI.utils.sayHello(type)
-
-    //Create a Pixi Application
-    let app = new PIXI.Application({
-        width: 1000,
-        height: 256,
-        antialias: true,
-        transparent: false,
-        resolution: 1
-      }
-    );
-    app.renderer.backgroundColor = "0x<%= background %>";
-
-    //Add the canvas that Pixi automatically created for you to the HTML document
-    document.body.appendChild(app.view);
-
-    //load an image and run the `setup` function when it's done
-    PIXI.loader
-      .add("/images/<%= icon %>")
-      .load(setup);
-
-    let cat, state, line, circle;
-    let verticalLine;
-    let boxList = [];
-    let timeText;
-
-
-    let x_shift = 30;
-    let y_shift = 60;
-
-    let Container = PIXI.Container;
-    let Graphics =  PIXI.Graphics;
-    let Text = PIXI.Text;
-    let TextStyle = PIXI.TextStyle;
-
-
-    //This `setup` function will run when the image has loaded
-    function setup() {
-      gameScene = new Container();
-      app.stage.addChild(gameScene);
-
-
-
-    let titleStyle = new TextStyle({
-      fontFamily: "Arial",
-      fontSize: 31,
-      fill: "black",
-      stroke: '#EEEEEE',
-      strokeThickness: 4,
-      dropShadow: true,
-      dropShadowColor: "#000000",
-      dropShadowBlur: 1,
-      dropShadowAngle: Math.PI / 4,
-      dropShadowDistance: 5,
+    
+    addDebug(`Original start: ${meetingData.start}`);
+    addDebug(`User timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+    
+    // Parse the start time properly - server sends it as a Date string
+    const startTime = moment(meetingData.start);
+    addDebug(`Parsed start time: ${startTime.format('YYYY-MM-DD HH:mm:ss Z')}`);
+    addDebug(`Current time: ${moment().format('YYYY-MM-DD HH:mm:ss Z')}`);
+    
+    // Calculate total duration and end time
+    let totalDurationMinutes = 0;
+    meetingData.topics.forEach(topic => {
+      totalDurationMinutes += topic.time || 0;
     });
+    
+    const endTime = moment(startTime).add(totalDurationMinutes, 'minutes');
+    addDebug(`Total duration: ${totalDurationMinutes} minutes`);
+    addDebug(`Meeting end time: ${endTime.format('YYYY-MM-DD HH:mm:ss Z')}`);
 
-    let personStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 18,
-    fill: "black",
-    stroke: '#C0C0C0',
-    strokeThickness: 1,
-    dropShadow: false,
-    dropShadowColor: "#000000",
-    dropShadowBlur: 4,
-    dropShadowAngle: Math.PI / 6,
-    dropShadowDistance: 6,
-    });
+    // Initialize PixiJS Application with async/await pattern
+    (async () => {
 
-    let topicStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 12,
-    fill: "black",
-    stroke: '#EEEEEE',
-    strokeThickness: 1
-    });
+      // Create PixiJS application using modern initialization
+      const app = new PIXI.Application();
+      
+      // Initialize the application with PixiJS 8.x syntax
+      await app.init({
+        width: window.innerWidth,
+        height: 400,
+        background: parseInt(meetingData.background),
+        resolution: window.devicePixelRatio || 1,
+        resizeTo: window
+      });
+      
+      // Append the application canvas to the document body
+      document.body.appendChild(app.canvas);
 
-    let timeStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 15,
-    fill: "black",
-    stroke: '#FFFFFF',
-    strokeThickness: 1,
-    dropShadow: false,
-    dropShadowColor: "#000000",
-    dropShadowBlur: 4,
-    dropShadowAngle: Math.PI / 2,
-    dropShadowDistance: 1,
-    });
+      // Create main timeline container
+      const timeline = new PIXI.Container();
+      app.stage.addChild(timeline);
 
-    let clockStyle = new TextStyle({
-    fontFamily: "Arial",
-    fontSize: 25,
-    fill: "red",
-    stroke: '#FFFFFF',
-    strokeThickness: 1,
-    dropShadow: false,
-    dropShadowColor: "#000000",
-    dropShadowBlur: 4,
-    dropShadowAngle: Math.PI / 6,
-    dropShadowDistance: 6,
-    });
+      // Timeline configuration
+      const nodeRadius = 10;
+      const lineHeight = 4;
+      const yPosition = app.screen.height / 2;
+      const startX = 50;
+      const endX = app.screen.width - 100; // Leave more space on the right
+      const timelineWidth = endX - startX;
 
+      addDebug(`Timeline dimensions: ${startX} to ${endX} (width: ${timelineWidth})`);
 
+      // Draw base timeline
+      const baseTimeline = new PIXI.Graphics();
+      baseTimeline.stroke({ width: lineHeight, color: 0xFFFFFF });
+      baseTimeline.moveTo(startX, yPosition);
+      baseTimeline.lineTo(endX, yPosition);
+      timeline.addChild(baseTimeline);
 
-    // Add Title near bottom of window
-    let message = new Text("<%= title %>", titleStyle);
-    message.y = 210;
-    message.x = x_shift;
-    app.stage.addChild(message);
+      // Create timeline segments for each topic with mission control aesthetics
+      const segments = [];
+      const segmentGlows = [];
+      const labels = [];
+      const timeLabels = [];
+      const tooltips = [];
+      const segmentData = []; // Store segment timing data
+      let currentPosition = startX;
+      let segmentStartTime = moment(startTime);
 
-    line = new Graphics();
-    line.lineStyle(2, 0x666666, 1);
-    line.moveTo(0, 0);
+      // Dynamic Mission Control Color Scheme from configuration
+      const colors = {
+        completed: parseInt(meetingData.config.colors.completed, 16),
+        current: parseInt(meetingData.config.colors.current, 16),
+        upcoming: parseInt(meetingData.config.colors.upcoming, 16),
+        completedAlpha: meetingData.config.colors.completedAlpha,
+        currentAlpha: meetingData.config.colors.currentAlpha,
+        upcomingAlpha: meetingData.config.colors.upcomingAlpha
+      };
 
-    line.lineTo(app.screen.width, 0);
-    line.x = 0 + x_shift - 5 ;
-    line.y = 25 + y_shift;
-    app.stage.addChild(line);
+      addDebug(`Color scheme - Completed: #${meetingData.config.colors.completed}, Current: #${meetingData.config.colors.current}, Upcoming: #${meetingData.config.colors.upcoming}`);
 
+      meetingData.topics.forEach((topic, index) => {
+        addDebug(`Processing topic ${index}: ${topic.person} - ${topic.topic} (${topic.time}min)`);
+        
+        if (topic.topic && topic.topic.trim() !== "") { // Skip buffer/empty topics
+          // Calculate segment width based on duration
+          const segmentWidth = Math.max(50, (topic.time / totalDurationMinutes) * timelineWidth);
+          const segmentHeight = meetingData.config.segmentHeight;
+          const halfHeight = segmentHeight / 2;
+          
+          // Store segment timing data for state tracking
+          const segmentEndTime = moment(segmentStartTime).add(topic.time, 'minutes');
+          segmentData.push({
+            startTime: moment(segmentStartTime),
+            endTime: segmentEndTime,
+            index: segments.length,
+            topic: topic,
+            width: segmentWidth,
+            position: currentPosition
+          });
 
-    // Add the boxes and text descriptions
-    <%  topics.forEach(function(topic,index) { %>
-      // Person and Topic Block
-      var messageB = new Text("<%= topic.person %>", personStyle);
-      messageB.y = 55 + y_shift;
-      messageB.x = <%= topic.location %> + x_shift;
-      app.stage.addChild(messageB);
+          // Create segment rectangle with rounded corners and depth
+          const segment = new PIXI.Graphics();
+          segment.roundRect(0, -halfHeight, segmentWidth, segmentHeight, 8);
+          segment.fill({ color: colors.upcoming, alpha: colors.upcomingAlpha });
+          segment.stroke({ width: 2, color: 0xFFFFFF, alpha: 0.3 });
+          segment.x = currentPosition;
+          segment.y = yPosition;
+          timeline.addChild(segment);
+          segments.push(segment);
 
-      var messageB = new Text("<%= topic.topic %>", topicStyle);
-      messageB.y = 75 + y_shift;
-      messageB.x = <%= topic.location %> + x_shift;
-      app.stage.addChild(messageB);
+          // Create glow effect for current segment (initially hidden)
+          const glow = new PIXI.Graphics();
+          glow.roundRect(-5, -halfHeight - 5, segmentWidth + 10, segmentHeight + 10, 12);
+          glow.fill({ color: colors.current, alpha: 0.0 });
+          glow.x = currentPosition;
+          glow.y = yPosition;
+          timeline.addChild(glow);
+          segmentGlows.push(glow);
 
-      var timeSlot = new Text(moment("<%= topic.startTime %>").format("hh:mm A"), timeStyle);
-      timeSlot.y = 93 + y_shift;
-      timeSlot.x = <%= topic.location %> + x_shift;
-      app.stage.addChild(timeSlot);
+          // Create status indicator (checkmark for completed, clock for current)
+          let statusIcon = null;
+          if (meetingData.config.showStatusIcons) {
+            statusIcon = new PIXI.Text({
+              text: '○', // Circle for upcoming
+              style: {
+                fontSize: 16,
+                fill: 0xFFFFFF,
+                align: 'center'
+              }
+            });
+            statusIcon.anchor.set(0.5);
+            statusIcon.x = currentPosition + 20;
+            statusIcon.y = yPosition;
+            timeline.addChild(statusIcon);
+          }
+          segmentData[segmentData.length - 1].statusIcon = statusIcon;
 
+          // Create topic label with configurable styling
+          const label = new PIXI.Text({
+            text: `${topic.person}: ${topic.topic}`,
+            style: {
+              fontSize: meetingData.config.blockFontSize,
+              fill: 0xFFFFFF,
+              align: 'center',
+              wordWrap: true,
+              wordWrapWidth: Math.max(segmentWidth - 40, 100),
+              fontWeight: '500'
+            }
+          });
+          label.anchor.set(0.5, 0);
+          label.x = currentPosition + segmentWidth / 2;
+          label.y = yPosition + halfHeight + 5;
+          timeline.addChild(label);
+          labels.push(label);
 
-      var roundBoxA = new Graphics();
-      roundBoxA.lineStyle(4, 0x99CCFF, 1);
-      roundBoxA.beginFill(0xFF9933);
-      roundBoxA.drawRoundedRect(0, 0, <%= topic.width %>, 50, 10)
-      roundBoxA.endFill();
-      <%  if (topic.id == 0){ %>
-        roundBoxA.x = <%= topic.location %> + x_shift;
-      <% } else { %>
-        roundBoxA.x = <%= topic.location %> + x_shift;
-      <% } %>
-      roundBoxA.y = y_shift;
-      app.stage.addChild(roundBoxA);
+          // Create time label with configurable styling
+          let timeLabel = null;
+          if (meetingData.config.showTimeLabels) {
+            timeLabel = new PIXI.Text({
+              text: `${topic.time}min`,
+              style: {
+                fontSize: meetingData.config.timeLabelFontSize,
+                fill: 0x00FF00, // Green like mission control
+                align: 'center',
+                fontFamily: 'monospace'
+              }
+            });
+            timeLabel.anchor.set(0.5, 1);
+            timeLabel.x = currentPosition + segmentWidth / 2;
+            timeLabel.y = yPosition - halfHeight - 5;
+            timeline.addChild(timeLabel);
+          }
+          timeLabels.push(timeLabel);
 
-      // Keep track of these for collision detection later
-      boxList.push(roundBoxA);
-    <% }); %>
+          // Create enhanced tooltip
+          const tooltip = new PIXI.Text({
+            text: `▸ ${topic.person}\n▸ ${topic.topic}\n▸ Duration: ${topic.time} minutes\n▸ Start: ${segmentStartTime.format('HH:mm')}\n▸ End: ${segmentEndTime.format('HH:mm')}`,
+            style: {
+              fontSize: 11,
+              fill: 0xFFFFFF,
+              align: 'left',
+              wordWrap: true,
+              wordWrapWidth: 220,
+              fontFamily: 'monospace',
+              lineHeight: 16
+            }
+          });
+          tooltip.anchor.set(0.5, 1);
+          tooltip.x = currentPosition + segmentWidth / 2;
+          tooltip.y = yPosition - 80;
+          tooltip.visible = false;
+          timeline.addChild(tooltip);
+          tooltips.push(tooltip);
 
+          // Add interactivity with better hover effects
+          segment.eventMode = 'static';
+          segment.cursor = 'pointer';
+          segment.on('pointerover', () => {
+            tooltip.visible = true;
+          });
+          segment.on('pointerout', () => {
+            tooltip.visible = false;
+          });
 
-    timeText = new Text("Time", clockStyle);
-    timeText.y = 170;
-    timeText.x = 5;
-    app.stage.addChild(timeText);
+          currentPosition += segmentWidth + 10; // Larger gap for better separation
+        } else {
+          // For buffer/empty topics, just advance position proportionally
+          const bufferWidth = (topic.time / totalDurationMinutes) * timelineWidth;
+          currentPosition += bufferWidth;
+        }
 
-    verticalLine = new Graphics();
-    verticalLine.lineStyle(5, 0xFFFF00, 1);
-    verticalLine.moveTo(0, 0);
-    verticalLine.lineTo(0, 63);
-    verticalLine.y = 50;
-    app.stage.addChild(verticalLine);
+        segmentStartTime.add(topic.time, 'minutes');
+      });
 
-    // Create the cat sprite
-    // Do this last so it will be on top
-    cat = new PIXI.Sprite(PIXI.loader.resources["/images/<%= icon %>"].texture);
-    cat.y = 0;
-    cat.vx = 0;
-    cat.vy = 0;
-    app.stage.addChild(cat);
+      addDebug(`Created ${segments.length} timeline segments`);
 
-
-
-    // Start the ticker
-    state = play;
-
-
-      //Start the game loop
-      app.ticker.add(delta => gameLoop(delta));
-    }
-
-    // The delta value represents the amount of fractional lag between frames. You can optionally
-    //   add it to the cat's position, to make the cat's animation independent of the frame rate.
-
-    function gameLoop(delta){
-      state(delta);
-    }
-
-    let counter = 0;
-    var touchedItems = new Set();
-    function play(delta){
-
-     // Light up a box when we are touching it
-
-     boxList.forEach((item, i) => {
-       if( hitTestRectangle(verticalLine, item, counter) )
-       {
-         if( pastMiddle(verticalLine, item) )
-         {
-           if( pastTwoThirds(verticalLine, item) )
-           {
-             // Two Thirds
-             if( counter % 10 == 0 ) // Blink
-             {
-                item.tint = 0xFFB6C1; // Pink
-             }
-             else
-             {
-               item.tint = 0xff0000; // Red
-             }
-
-           }
-           else
-           {
-              // Middle
-              item.tint = 0xFFA500; // Orange
-           }
-         }
-         else
-         {
-            // Before middle
-            item.tint = 0xFFFF00; // Yellow
-         }
-
-         touchedItems.add(item);
-
-
-       }
-       else {
-         // if( touchedItems.has(item) )
-         if( completelyPassed(verticalLine, item) )
-         {
-           // Visited
-           item.tint = 0x999999; // Gray
-         }
-         else
-         {
-           // Unvisited
-          item.tint = 0xccff99; // Green
-         }
-       }
-
-     });
-
-
-      if(counter % 10 == 0)
-      {
-        var currentdate = new Date();
-
-        var startTime = new Date("<%= start %>");
-
-        // Take milliseconds and /1000 to get seconds
-        var timeAfterStart = Math.round((currentdate-startTime)/1000,1);
-        var markerLoction = timeAfterStart/<%= movement_rate %>;
-        cat.x = markerLoction;
-        verticalLine.x = markerLoction + 64/2; // 64 is the width of the image
-        timeText.x = markerLoction;
-
-        timeText.text = moment(currentdate).format("hh:mm:ss A");
+      // Create configurable current time marker
+      const currentTimeMarker = new PIXI.Container();
+      const markerConfig = meetingData.config.timeMarker;
+      
+      // Marker line (configurable)
+      let markerLine = null;
+      if (markerConfig.showLine) {
+        markerLine = new PIXI.Graphics();
+        const lineColor = parseInt(markerConfig.primaryColor, 16);
+        const halfHeight = markerConfig.height / 2;
+        
+        markerLine.stroke({ width: markerConfig.lineWidth, color: lineColor });
+        markerLine.moveTo(0, -halfHeight);
+        markerLine.lineTo(0, halfHeight);
+        currentTimeMarker.addChild(markerLine);
+        
+        // Add arrow or special styling based on marker style
+        if (markerConfig.style === "arrow") {
+          // Create arrow head
+          const arrowSize = markerConfig.circleSize;
+          markerLine.moveTo(-arrowSize, -halfHeight + arrowSize);
+          markerLine.lineTo(0, -halfHeight);
+          markerLine.lineTo(arrowSize, -halfHeight + arrowSize);
+        }
       }
 
-      counter++;
-    }
-
-
-    function pastMiddle(r1, r2)
-    {
-      //Define the variables we'll need to calculate
-      let combinedHalfWidths, vx;
-
-      //Find the center points of each sprite
-      r1.centerX = r1.x + r1.width / 2;
-      r2.centerX = r2.x + r2.width / 2;
-
-      //Find the half-widths and half-heights of each sprite
-      r1.halfWidth = r1.width / 2;
-      r2.halfWidth = r2.width / 2;
-
-      //Calculate the distance vector between the sprites
-      vx = r1.centerX - r2.centerX;
-
-      if(vx > 0)
-      {
-        return true;
+      // Marker circle (configurable)
+      let markerCircle = null;
+      if (markerConfig.showCircle) {
+        markerCircle = new PIXI.Graphics();
+        const circleColor = parseInt(markerConfig.primaryColor, 16);
+        
+        if (markerConfig.style === "modern") {
+          markerCircle.circle(0, 0, markerConfig.circleSize);
+          markerCircle.fill(circleColor);
+        } else if (markerConfig.style === "classic") {
+          markerCircle.circle(0, 0, markerConfig.circleSize);
+          markerCircle.fill(circleColor);
+          markerCircle.stroke({ width: 2, color: 0xFFFFFF });
+        } else if (markerConfig.style === "minimal") {
+          markerCircle.circle(0, 0, markerConfig.circleSize / 2);
+          markerCircle.fill(circleColor);
+        } else if (markerConfig.style === "arrow") {
+          // Diamond shape for arrow style
+          const size = markerConfig.circleSize;
+          markerCircle.moveTo(0, -size);
+          markerCircle.lineTo(size, 0);
+          markerCircle.lineTo(0, size);
+          markerCircle.lineTo(-size, 0);
+          markerCircle.lineTo(0, -size);
+          markerCircle.fill(circleColor);
+        }
+        
+        currentTimeMarker.addChild(markerCircle);
       }
-      else {
-        return false;
+
+      // Glow effect (configurable)
+      let glowEffect = null;
+      if (markerConfig.showGlow && markerCircle) {
+        glowEffect = new PIXI.Graphics();
+        const glowColor = parseInt(markerConfig.secondaryColor, 16);
+        const glowSize = markerConfig.circleSize * 3;
+        
+        glowEffect.circle(0, 0, glowSize);
+        glowEffect.fill({ color: glowColor, alpha: 0 }); // Will be animated
+        currentTimeMarker.addChildAt(glowEffect, 0); // Add behind other elements
       }
-    }
 
-    function pastTwoThirds(line, item)
-    {
-      //Define the variables we'll need to calculate
-      let combinedHalfWidths, vx;
-
-      //Find the center points of each sprite
-      line.centerX = line.x + line.width / 2;
-      item.centerX = (item.x + item.width / 2) + (item.width / 3);
-
-
-      //Calculate the distance vector between the sprites
-      vx = line.centerX - item.centerX;
-
-      if(vx > 0)
-      {
-        return true;
+      // Create configurable time display
+      const timeDisplay = new PIXI.Text({
+        text: '',
+        style: {
+          fontSize: markerConfig.textStyle.fontSize,
+          fill: parseInt(markerConfig.textStyle.color, 16),
+          align: 'center',
+          fontFamily: markerConfig.textStyle.fontFamily
+        }
+      });
+      timeDisplay.anchor.set(0.5, 1);
+      timeDisplay.y = -(markerConfig.height / 2) - 10;
+      
+      // Add text background if enabled
+      if (markerConfig.textStyle.showBackground) {
+        const textBg = new PIXI.Graphics();
+        textBg.rect(-50, timeDisplay.y - markerConfig.textStyle.fontSize - 5, 100, markerConfig.textStyle.fontSize + 10);
+        textBg.fill({ 
+          color: parseInt(markerConfig.textStyle.backgroundColor, 16), 
+          alpha: markerConfig.textStyle.backgroundAlpha 
+        });
+        currentTimeMarker.addChild(textBg);
       }
-      else {
-        return false;
+      
+      currentTimeMarker.addChild(timeDisplay);
+
+      currentTimeMarker.y = yPosition;
+      timeline.addChild(currentTimeMarker);
+
+      addDebug(`Time marker configured: ${markerConfig.style} style, ${markerConfig.primaryColor} primary, ${markerConfig.lineWidth}px line`);
+      addDebug(`Precise positioning algorithm enabled - marker will sync with segment boundaries`);
+
+      // Zoom and pan functionality
+      let isDragging = false;
+      let dragStart = { x: 0, y: 0 };
+      let currentScale = 1;
+
+      // Set initial zoom to fit the entire timeline with some padding
+      const initialScale = Math.min(1, (app.screen.width - 200) / timelineWidth);
+      currentScale = initialScale;
+      timeline.scale.set(currentScale);
+      
+      // Center the timeline
+      timeline.x = (app.screen.width - timelineWidth * currentScale) / 2;
+      timeline.y = 0;
+
+      addDebug(`Initial scale: ${initialScale.toFixed(2)}, Timeline centered at: ${timeline.x.toFixed(0)}`);
+
+      app.stage.eventMode = 'static';
+      app.stage.hitArea = app.screen;
+      app.stage.on('pointerdown', onDragStart)
+        .on('pointerup', onDragEnd)
+        .on('pointerupoutside', onDragEnd)
+        .on('pointermove', onDragMove);
+
+      function onDragStart(event) {
+        isDragging = true;
+        dragStart = { x: event.global.x - timeline.x, y: event.global.y - timeline.y };
       }
-    }
 
-    function completelyPassed(line, item)
-    {
-      //Define the variables we'll need to calculate
-      let vx;
-
-      //Find the center points of each sprite
-      line.centerX = line.x + line.width / 2;
-      item.centerX = item.x + item.width;
-
-
-      //Calculate the distance vector between the sprites
-      vx = line.centerX - item.centerX;
-
-      if(vx > 0)
-      {
-        return true;
+      function onDragEnd() {
+        isDragging = false;
       }
-      else {
-        return false;
+
+      function onDragMove(event) {
+        if (isDragging) {
+          timeline.x = event.global.x - dragStart.x;
+          timeline.y = event.global.y - dragStart.y;
+        }
       }
-    }
 
+      function zoom(direction) {
+        const factor = 0.2;
+        const newScale = Math.max(0.1, Math.min(3, currentScale + direction * factor));
 
-    function hitTestRectangle(r1, r2, counter) {
+        if (newScale !== currentScale) {
+          const centerX = app.screen.width / 2;
+          const centerY = app.screen.height / 2;
+          
+          // Calculate zoom center
+          const worldPos = {
+            x: (centerX - timeline.x) / currentScale,
+            y: (centerY - timeline.y) / currentScale
+          };
 
-    //Define the variables we'll need to calculate
-    let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+          currentScale = newScale;
+          timeline.scale.set(currentScale);
 
-    //hit will determine whether there's a collision
-    hit = false;
-
-    //Find the center points of each sprite
-    r1.centerX = r1.x + r1.width / 2;
-    r1.centerY = r1.y + r1.height / 2;
-    r2.centerX = r2.x + r2.width / 2;
-    r2.centerY = r2.y + r2.height / 2;
-
-    //Find the half-widths and half-heights of each sprite
-    r1.halfWidth = r1.width / 2;
-    r1.halfHeight = r1.height / 2;
-    r2.halfWidth = r2.width / 2;
-    r2.halfHeight = r2.height / 2;
-
-    //Calculate the distance vector between the sprites
-    vx = r1.centerX - r2.centerX;
-    vy = r1.centerY - r2.centerY;
-
-
-
-    //Figure out the combined half-widths and half-heights
-    combinedHalfWidths = r1.halfWidth + r2.halfWidth;
-    combinedHalfHeights = r1.halfHeight + r2.halfHeight;
-
-    //Check for a collision on the x axis
-    if (Math.abs(vx) < combinedHalfWidths) {
-
-      //A collision might be occurring. Check for a collision on the y axis
-      if (Math.abs(vy) < combinedHalfHeights) {
-
-        //There's definitely a collision happening
-        hit = true;
-      } else {
-
-        //There's no collision on the y axis
-        hit = false;
+          // Adjust position to maintain zoom center
+          timeline.x = centerX - worldPos.x * currentScale;
+          timeline.y = centerY - worldPos.y * currentScale;
+        }
       }
-    } else {
 
-      //There's no collision on the x axis
-      hit = false;
-    }
+      function resetView() {
+        const resetScale = Math.min(1, (app.screen.width - 200) / timelineWidth);
+        currentScale = resetScale;
+        timeline.scale.set(currentScale);
+        timeline.x = (app.screen.width - timelineWidth * currentScale) / 2;
+        timeline.y = 0;
+      }
 
-    //`hit` will be either `true` or `false`
-    return hit;
-  }
+      document.getElementById('zoomIn').addEventListener('click', () => zoom(1));
+      document.getElementById('zoomOut').addEventListener('click', () => zoom(-1));
+      document.getElementById('resetView').addEventListener('click', resetView);
 
-  </script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js">
+      // Enhanced animation loop with real-time segment state tracking
+      let currentSegmentIndex = -1;
+      let lastUpdateTime = 0;
+      
+      app.ticker.add((time) => {
+        const now = moment();
+        
+        // Update time marker position with precise segment-based calculation
+        if (now.isBefore(startTime)) {
+          currentTimeMarker.x = startX;
+          const timeToStart = moment.duration(startTime.diff(now));
+          timeDisplay.text = `T-${timeToStart.humanize()}`;
+        } else if (now.isAfter(endTime)) {
+          currentTimeMarker.x = endX;
+          timeDisplay.text = 'MISSION COMPLETE';
+        } else {
+          // Find the precise position based on actual segment timing and positions
+          let markerX = startX;
+          
+          // Find which segment(s) we're in and calculate precise position
+          for (let i = 0; i < segmentData.length; i++) {
+            const segment = segmentData[i];
+            
+            if (now.isBefore(segment.startTime)) {
+              // We're before this segment, position at the start of it
+              markerX = segment.position;
+              break;
+            } else if (now.isBetween(segment.startTime, segment.endTime, null, '[]')) {
+              // We're inside this segment, calculate position within it
+              const segmentProgress = now.diff(segment.startTime) / segment.endTime.diff(segment.startTime);
+              markerX = segment.position + (segmentProgress * segment.width);
+              break;
+            } else if (i === segmentData.length - 1) {
+              // We're after the last segment
+              markerX = segment.position + segment.width;
+            } else if (now.isBefore(segmentData[i + 1].startTime)) {
+              // We're in the gap between this segment and the next
+              const nextSegment = segmentData[i + 1];
+              const gapStart = segment.position + segment.width;
+              const gapEnd = nextSegment.position;
+              const gapProgress = now.diff(segment.endTime) / nextSegment.startTime.diff(segment.endTime);
+              markerX = gapStart + (gapProgress * (gapEnd - gapStart));
+              break;
+            }
+          }
+          
+          currentTimeMarker.x = markerX;
+          timeDisplay.text = now.format('HH:mm:ss');
+        }
+
+        // Animate marker with mission control pulsing
+        if (markerCircle) {
+          markerCircle.alpha = 0.8 + Math.sin(Date.now() / 200) * 0.2;
+        }
+        
+        // Update segment states based on current time (throttle to avoid excessive updates)
+        if (Date.now() - lastUpdateTime > 1000) { // Update every second
+          lastUpdateTime = Date.now();
+          
+          let newCurrentSegmentIndex = -1;
+          
+          // Find which segment we're currently in
+          segmentData.forEach((segData, index) => {
+            const isCompleted = now.isAfter(segData.endTime);
+            const isCurrent = now.isBetween(segData.startTime, segData.endTime, null, '[]');
+            const isUpcoming = now.isBefore(segData.startTime);
+            
+            if (isCurrent) {
+              newCurrentSegmentIndex = index;
+            }
+            
+            const segment = segments[segData.index];
+            const glow = segmentGlows[segData.index];
+            const label = labels[segData.index];
+            const timeLabel = timeLabels[segData.index];
+            const statusIcon = segData.statusIcon;
+            
+            if (isCompleted) {
+              // Completed state - dark gray with checkmark
+              segment.clear();
+              segment.roundRect(0, -25, segData.width, 50, 8);
+              segment.fill({ color: colors.completed, alpha: colors.completedAlpha });
+              segment.stroke({ width: 2, color: 0x00FF00, alpha: 0.5 }); // Green border for completed
+              
+              glow.alpha = 0; // No glow for completed
+              label.style.fill = 0xAAAAAA; // Muted text
+              timeLabel.style.fill = 0x00AA00; // Dim green
+              statusIcon.text = '✓';
+              statusIcon.style.fill = 0x00FF00;
+              
+            } else if (isCurrent) {
+              // Current state - bright amber with pulsing glow
+              segment.clear();
+              segment.roundRect(0, -25, segData.width, 50, 8);
+              segment.fill({ color: colors.current, alpha: colors.currentAlpha });
+              segment.stroke({ width: 3, color: 0xFFAA00, alpha: 0.8 }); // Bright orange border
+              
+              // Pulsing glow effect
+              const glowAlpha = 0.2 + Math.sin(Date.now() / 400) * 0.15;
+              glow.alpha = glowAlpha;
+              
+              label.style.fill = 0xFFFFFF; // Bright white text
+              timeLabel.style.fill = 0xFFAA00; // Bright orange
+              statusIcon.text = '▶';
+              statusIcon.style.fill = 0xFFAA00;
+              
+              // Calculate progress within current segment
+              const segmentProgress = now.diff(segData.startTime) / segData.endTime.diff(segData.startTime);
+              const progressBar = new PIXI.Graphics();
+              progressBar.rect(0, 23, segData.width * segmentProgress, 2);
+              progressBar.fill({ color: 0xFFAA00, alpha: 0.8 });
+              progressBar.x = segData.position;
+              progressBar.y = yPosition;
+              
+              // Remove old progress bar if exists
+              if (segData.progressBar) {
+                timeline.removeChild(segData.progressBar);
+              }
+              timeline.addChild(progressBar);
+              segData.progressBar = progressBar;
+              
+            } else if (isUpcoming) {
+              // Upcoming state - cool blue
+              segment.clear();
+              segment.roundRect(0, -25, segData.width, 50, 8);
+              segment.fill({ color: colors.upcoming, alpha: colors.upcomingAlpha });
+              segment.stroke({ width: 2, color: 0x0099CC, alpha: 0.6 });
+              
+              glow.alpha = 0; // No glow for upcoming
+              label.style.fill = 0xCCCCCC; // Slightly muted text
+              timeLabel.style.fill = 0x0099CC; // Blue
+              statusIcon.text = '○';
+              statusIcon.style.fill = 0x0099CC;
+              
+              // Remove progress bar if segment is no longer current
+              if (segData.progressBar) {
+                timeline.removeChild(segData.progressBar);
+                segData.progressBar = null;
+              }
+            }
+          });
+          
+          // Update current segment tracking
+          if (newCurrentSegmentIndex !== currentSegmentIndex) {
+            currentSegmentIndex = newCurrentSegmentIndex;
+            if (currentSegmentIndex >= 0) {
+              const currentSeg = segmentData[currentSegmentIndex];
+              addDebug(`Now in segment: ${currentSeg.topic.person} - ${currentSeg.topic.topic}`);
+            }
+          }
+        }
+      });
+
+      // Title display with configurable styling
+      const titleText = new PIXI.Text({
+        text: meetingData.title,
+        style: {
+          fontSize: meetingData.config.titleFontSize,
+          fill: 0xFFFFFF,
+          align: 'center',
+          fontWeight: 'bold'
+        }
+      });
+      titleText.anchor.set(0.5, 0);
+      titleText.x = app.screen.width / 2;
+      titleText.y = 15;
+      app.stage.addChild(titleText);
+
+      // Mission status display (bottom right)
+      const statusDisplay = new PIXI.Text({
+        text: 'MISSION STATUS: STANDBY',
+        style: {
+          fontSize: 12,
+          fill: 0x00FF00,
+          align: 'right',
+          fontFamily: 'monospace'
+        }
+      });
+      statusDisplay.anchor.set(1, 1);
+      statusDisplay.x = app.screen.width - 20;
+      statusDisplay.y = app.screen.height - 20;
+      app.stage.addChild(statusDisplay);
+
+      // Current segment info display (top center)
+      const currentSegmentDisplay = new PIXI.Text({
+        text: '',
+        style: {
+          fontSize: 14,
+          fill: 0xFFAA00,
+          align: 'center',
+          fontFamily: 'monospace'
+        }
+      });
+      currentSegmentDisplay.anchor.set(0.5, 0);
+      currentSegmentDisplay.x = app.screen.width / 2;
+      currentSegmentDisplay.y = 50;
+      app.stage.addChild(currentSegmentDisplay);
+
+      // Main animation loop with enhanced mission control features
+      app.ticker.add((time) => {
+        const now = moment();
+        
+        // Update time marker position with precise segment-based calculation
+        if (now.isBefore(startTime)) {
+          currentTimeMarker.x = startX;
+          const timeToStart = moment.duration(startTime.diff(now));
+          timeDisplay.text = `T-${timeToStart.humanize()}`;
+          statusDisplay.text = 'MISSION STATUS: PRE-FLIGHT';
+          statusDisplay.style.fill = 0x0099CC;
+          currentSegmentDisplay.text = `LAUNCHING IN ${timeToStart.humanize().toUpperCase()}`;
+        } else if (now.isAfter(endTime)) {
+          currentTimeMarker.x = endX;
+          timeDisplay.text = 'MISSION COMPLETE';
+          statusDisplay.text = 'MISSION STATUS: COMPLETE';
+          statusDisplay.style.fill = 0x00FF00;
+          currentSegmentDisplay.text = 'ALL OBJECTIVES ACHIEVED';
+        } else {
+          // Find the precise position based on actual segment timing and positions
+          let markerX = startX;
+          
+          // Find which segment(s) we're in and calculate precise position
+          for (let i = 0; i < segmentData.length; i++) {
+            const segment = segmentData[i];
+            
+            if (now.isBefore(segment.startTime)) {
+              // We're before this segment, position at the start of it
+              markerX = segment.position;
+              break;
+            } else if (now.isBetween(segment.startTime, segment.endTime, null, '[]')) {
+              // We're inside this segment, calculate position within it
+              const segmentProgress = now.diff(segment.startTime) / segment.endTime.diff(segment.startTime);
+              markerX = segment.position + (segmentProgress * segment.width);
+              break;
+            } else if (i === segmentData.length - 1) {
+              // We're after the last segment
+              markerX = segment.position + segment.width;
+            } else if (now.isBefore(segmentData[i + 1].startTime)) {
+              // We're in the gap between this segment and the next
+              const nextSegment = segmentData[i + 1];
+              const gapStart = segment.position + segment.width;
+              const gapEnd = nextSegment.position;
+              const gapProgress = now.diff(segment.endTime) / nextSegment.startTime.diff(segment.endTime);
+              markerX = gapStart + (gapProgress * (gapEnd - gapStart));
+              break;
+            }
+          }
+          
+          currentTimeMarker.x = markerX;
+          timeDisplay.text = now.format('HH:mm:ss');
+          statusDisplay.text = 'MISSION STATUS: ACTIVE';
+          statusDisplay.style.fill = 0xFFAA00;
+        }
+
+        // Animate marker with configurable pulsing
+        if (markerCircle) {
+          markerCircle.alpha = 0.8 + Math.sin(Date.now() / markerConfig.pulseSpeed) * 0.2;
+        }
+        
+        // Animate glow effect if enabled
+        if (glowEffect) {
+          const glowAlpha = markerConfig.glowIntensity + Math.sin(Date.now() / (markerConfig.pulseSpeed * 1.5)) * (markerConfig.glowIntensity * 0.5);
+          glowEffect.alpha = glowAlpha;
+        }
+        
+        // Update segment states based on current time (throttle to avoid excessive updates)
+        if (Date.now() - lastUpdateTime > 1000) { // Update every second
+          lastUpdateTime = Date.now();
+          
+          let newCurrentSegmentIndex = -1;
+          
+          // Find which segment we're currently in
+          segmentData.forEach((segData, index) => {
+            const isCompleted = now.isAfter(segData.endTime);
+            const isCurrent = now.isBetween(segData.startTime, segData.endTime, null, '[]');
+            const isUpcoming = now.isBefore(segData.startTime);
+            
+            if (isCurrent) {
+              newCurrentSegmentIndex = index;
+            }
+            
+            const segment = segments[segData.index];
+            const glow = segmentGlows[segData.index];
+            const label = labels[segData.index];
+            const timeLabel = timeLabels[segData.index];
+            const statusIcon = segData.statusIcon;
+            
+            const segmentHeight = meetingData.config.segmentHeight;
+            const halfHeight = segmentHeight / 2;
+            
+            if (isCompleted) {
+              // Completed state - dark gray with checkmark
+              segment.clear();
+              segment.roundRect(0, -halfHeight, segData.width, segmentHeight, 8);
+              segment.fill({ color: colors.completed, alpha: colors.completedAlpha });
+              segment.stroke({ width: 2, color: 0x00FF00, alpha: 0.5 }); // Green border for completed
+              
+              glow.alpha = 0; // No glow for completed
+              label.style.fill = 0xAAAAAA; // Muted text
+              if (timeLabel) timeLabel.style.fill = 0x00AA00; // Dim green
+              if (statusIcon) {
+                statusIcon.text = '✓';
+                statusIcon.style.fill = 0x00FF00;
+              }
+              
+            } else if (isCurrent) {
+              // Current state - bright amber with pulsing glow
+              segment.clear();
+              segment.roundRect(0, -halfHeight, segData.width, segmentHeight, 8);
+              segment.fill({ color: colors.current, alpha: colors.currentAlpha });
+              segment.stroke({ width: 3, color: 0xFFAA00, alpha: 0.8 }); // Bright orange border
+              
+              // Pulsing glow effect
+              const glowAlpha = 0.2 + Math.sin(Date.now() / (400 / meetingData.config.animationSpeed)) * 0.15;
+              glow.alpha = glowAlpha;
+              
+              label.style.fill = 0xFFFFFF; // Bright white text
+              if (timeLabel) timeLabel.style.fill = 0xFFAA00; // Bright orange
+              if (statusIcon) {
+                statusIcon.text = '▶';
+                statusIcon.style.fill = 0xFFAA00;
+              }
+              
+              // Progress bar (configurable)
+              if (meetingData.config.showProgressBars) {
+                const segmentProgress = now.diff(segData.startTime) / segData.endTime.diff(segData.startTime);
+                const progressBar = new PIXI.Graphics();
+                progressBar.rect(0, halfHeight - 2, segData.width * segmentProgress, 2);
+                progressBar.fill({ color: 0xFFAA00, alpha: 0.8 });
+                progressBar.x = segData.position;
+                progressBar.y = yPosition;
+                
+                // Remove old progress bar if exists
+                if (segData.progressBar) {
+                  timeline.removeChild(segData.progressBar);
+                }
+                timeline.addChild(progressBar);
+                segData.progressBar = progressBar;
+              }
+              
+              // Update current segment display
+              const timeRemaining = moment.duration(segData.endTime.diff(now));
+              currentSegmentDisplay.text = `CURRENT: ${segData.topic.person.toUpperCase()} | ${timeRemaining.minutes()}:${timeRemaining.seconds().toString().padStart(2, '0')} REMAINING`;
+              
+            } else if (isUpcoming) {
+              // Upcoming state - cool blue
+              segment.clear();
+              segment.roundRect(0, -halfHeight, segData.width, segmentHeight, 8);
+              segment.fill({ color: colors.upcoming, alpha: colors.upcomingAlpha });
+              segment.stroke({ width: 2, color: 0x0099CC, alpha: 0.6 });
+              
+              glow.alpha = 0; // No glow for upcoming
+              label.style.fill = 0xCCCCCC; // Slightly muted text
+              if (timeLabel) timeLabel.style.fill = 0x0099CC; // Blue
+              if (statusIcon) {
+                statusIcon.text = '○';
+                statusIcon.style.fill = 0x0099CC;
+              }
+              
+              // Remove progress bar if segment is no longer current
+              if (segData.progressBar) {
+                timeline.removeChild(segData.progressBar);
+                segData.progressBar = null;
+              }
+            }
+          });
+          
+          // Update current segment tracking
+          if (newCurrentSegmentIndex !== currentSegmentIndex) {
+            currentSegmentIndex = newCurrentSegmentIndex;
+            if (currentSegmentIndex >= 0) {
+              const currentSeg = segmentData[currentSegmentIndex];
+              addDebug(`🎯 ACTIVE: ${currentSeg.topic.person} - ${currentSeg.topic.topic}`);
+            } else if (now.isAfter(endTime)) {
+              currentSegmentDisplay.text = 'MISSION ACCOMPLISHED';
+              addDebug(`✅ MISSION COMPLETE`);
+            } else {
+              currentSegmentDisplay.text = 'MISSION STANDBY';
+            }
+          }
+        }
+      });
+
+    })().catch(console.error);
+
   </script>
 </body>
 </html>

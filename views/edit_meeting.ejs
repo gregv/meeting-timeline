@@ -8,218 +8,823 @@
 
     <title>Meeting Timeline - Edit</title>
     <% include meeting_header %>
+    <style>
+      .config-section {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .config-section h5 {
+        color: #495057;
+        margin-bottom: 15px;
+      }
+      .color-preview {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        border: 2px solid #dee2e6;
+        display: inline-block;
+        margin-left: 10px;
+        vertical-align: middle;
+      }
+      .range-value {
+        font-weight: bold;
+        color: #007bff;
+        min-width: 40px;
+        display: inline-block;
+      }
+      .theme-preview {
+        height: 60px;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+        position: relative;
+        overflow: hidden;
+      }
+      .theme-preview.mission-control {
+        background: linear-gradient(135deg, #0047BB 0%, #003080 100%);
+        color: white;
+      }
+      .theme-preview.classic {
+        background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+        color: #495057;
+      }
+      .timeline-segments {
+        display: flex;
+        height: 20px;
+        margin-top: 5px;
+      }
+      .segment {
+        margin-right: 2px;
+        border-radius: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: white;
+        text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+      }
+      .nav-tabs .nav-link.active {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+      }
+      .form-check-input:checked {
+        background-color: #007bff;
+        border-color: #007bff;
+      }
+    </style>
   </head>
   <body class="bg-light">
 
-<div class="container">
+<div class="container-fluid">
   <main>
-    <div class="py-5 text-center">
-      <h4>Editing Meeting Timeline <%= id %></h4>
-      <a class="btn btn-secondary btn-sm" href="/meeting/"><img src="/images/house.svg" alt="Go back to home"/> Home</a>
-      <a class="btn btn-secondary btn-sm" href="/meeting/<%= id %>"><img src="/images/eye.svg" alt="View the published timeline"/> View</a>
-    </div>
-
-    <div class="row g-3">
-      <div class="col-md-12 col-lg-12">
-        <form action="/meeting/<%= id %>" method="POST">
-        <input type="hidden" name="meeting_id" value="<%= id %>"/>
-
-        <h4 class="mb-3">Editing Meeting Details</h4>
-          <div class="row g-3">
-
-            <div class="col-12">
-              <label for="title" class="form-label">Meeting Title</label>
-              <input type="text" name="title" class="form-control" id="title" placeholder="" value="<%= meeting.title %>" required>
-              <div class="invalid-feedback">
-                Valid meeting title name is required.
-              </div>
-            </div>
-
-            <div class="col-md-4">
-              <!-- https://codepen.io/johnfinkdesign/pen/NRyBZb?editors=1111 -->
-              <label for="start" class="form-label">Start Time</label>
-              <div class="form-group" id="start">
-                <div class="input-group time timepicker">
-                  <input name="start_time" class="form-control" value="<%= meeting.start_time %>"><span class="input-group-append input-group-addon"><span class="input-group-text"><i class="fa fa-clock"></i></span></span>
-                </div>
-              </div>
-              <div class="invalid-feedback">
-                Please select a valid start time.
-              </div>
-            </div>
-
-
-            <div class="col-md-5">
-              <label for="timezone" class="form-label">Timezone</label>
-              <select class="form-control" name="timezone" id="timezone" required>
-                <option value="<%= meeting.timezone %>"><%= meeting.timezone %></option>
-                <%  all_timezones.forEach(function(tz,index) { %>
-                  <option><%= tz %></option>
-                <% }); %>
-
-              </select>
-              <div class="invalid-feedback">
-                Please select a valid timezone.
-              </div>
-            </div>
-
-            <div class="col-md-5">
-              <label for="background" class="form-label">Background Color</label>
-              <button class="btn btn-lg" id="color_display" type="button" style="background-color:<%= meeting.background %>"></button>
-              <input type="text" id="background" name="background" class="form-control" value="<%= meeting.background %>" required/>
-
-              <div class="invalid-feedback">
-                Please select a valid backgroud color.
-              </div>
-            </div>
-
-            <div class="col-md-5">
-              <label for="icon" class="form-label">Icon</label>
-
-              <div class="form-check">
-              <input class="form-check-input" type="radio" name="icon" id="icon" value="cat.png"
-                <% if( meeting.icon == null || meeting.icon == "cat.png"){ %>checked<%}%>>
-              <label class="form-check-label" for="icon">
-                Cat <img src="/images/cat.png" width="30px">
-              </label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="icon" id="icon2" value="pp.png"
-                <% if(meeting.icon == "pp.png"){ %>checked<%}%>>
-                <label class="form-check-label" for="icon2">
-                  PayPal Logo <img src="/images/pp.png" width="30px">
-                </label>
-              </div>
-
-              <div class="invalid-feedback">
-                Please select a valid icon
-              </div>
-            </div>
-
-          </div>
-
-          <hr class="my-4">
-
-          <h4 class="mb-3">Meeting Agenda</h4>
-          <h6 class="text-muted">Specify who is speaking, about what, and for how long</h6>
-
-
-          <div class="row gy-3">
-
-            <div class="col-md-4">
-              <label for="person1" class="form-label">Person</label>
-              <input type="text" class="form-control" id="person1" placeholder="Pam">
-
-              <div class="invalid-feedback">
-                Person is required
-              </div>
-            </div>
-
-            <div class="col-md-5">
-              <label for="topic1" class="form-label">Topic</label>
-              <input type="text" class="form-control" id="topic1" placeholder="Pamb with a b?">
-              <div class="invalid-feedback">
-                Topic is required
-              </div>
-            </div>
-
-            <div class="col-md-2">
-              <label for="duration1" class="form-label">Duration</label>
-              <input type="number" class="form-control" id="duration1" placeholder="5">
-              <div class="invalid-feedback">
-                Duration required
-              </div>
-            </div>
-
-            <div class="col-md-12">
-              <button id="add" class="btn btn-warning add-more" type="button">Add</button>
-            </div>
-
-          </div>
-
-          <hr class="my-4">
-
-
-          <!-- This is where the Javascript code in create_meeting.js will add new form elements-->
-          <h6 class="text-muted">Click and drag an item below to reorder</h6>
-          <ul class="list-group" id="demo1">
-            <template id="meetingItemTemplate">
-              <li class="list-group-item" name="field" type="text">
-                <div class="input-group mb-2 mr-sm-2">
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Person</div>
-                  </div>
-                  <input type="text" class="form-control col-sm-2" name="person" value="{person}">
-
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Topic</div>
-                  </div>
-                  <input type="text" class="form-control" name="topic" value="{topic}">
-
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Duration</div>
-                  </div>
-                  <input type="number" class="form-control col-md-2" name="duration" value="{duration}">
-
-                  <button class="btn btn-outline-secondary remove-me" type="button"><img src="/images/trash.svg"/></button>
-                </div>
-              </li>
-            </template>
-
-            <% if (Array.isArray(meeting.person)) { %>
-            <%  meeting.person.forEach(function(person,index) { %>
-              <li class="list-group-item" name="field" type="text">
-                <div class="input-group mb-2 mr-sm-2">
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Person</div>
-                  </div>
-                  <input type="text" class="form-control col-sm-2" name="person" value="<%= person %>">
-
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Topic</div>
-                  </div>
-                  <input type="text" class="form-control" name="topic" value="<%= meeting.topic[index] %>">
-
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Duration</div>
-                  </div>
-                  <input type="number" class="form-control col-md-2" name="duration" value="<%= meeting.duration[index] %>">
-
-                  <button class="btn btn-outline-secondary remove-me" type="button"><img src="/images/trash.svg"/></button>
-                </div>
-              </li>
-            <% }); %>
-            <% } else { %>
-              <li class="list-group-item" name="field" type="text">
-                <div class="input-group mb-2 mr-sm-2">
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Person</div>
-                  </div>
-                  <input type="text" class="form-control col-sm-2" name="person" value="<%= meeting.person %>">
-
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Topic</div>
-                  </div>
-                  <input type="text" class="form-control" name="topic" value="<%= meeting.topic %>">
-
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Duration</div>
-                  </div>
-                  <input type="number" class="form-control col-md-2" name="duration" value="<%= meeting.duration %>">
-
-                  <button class="btn btn-outline-secondary remove-me" type="button"><img src="/images/trash.svg"/></button>
-                </div>
-              </li>
-            <% } %>
-
-          </ul>
-          <hr class="my-4">
-          <button class="w-100 btn btn-warning btn-lg" type="submit">Save</button>
-        </form>
+    <div class="py-4 text-center border-bottom mb-4">
+      <h3>🚀 Mission Control Editor</h3>
+      <p class="text-muted">Configure your meeting timeline for optimal mission success</p>
+      <div class="btn-group" role="group">
+        <a class="btn btn-outline-secondary" href="/meeting/"><img src="/images/house.svg" alt="Go back to home" style="width: 16px; margin-right: 5px;"/> Home</a>
+        <a class="btn btn-primary" href="/meeting/<%= id %>" target="_blank"><img src="/images/eye.svg" alt="View the published timeline" style="width: 16px; margin-right: 5px;"/> Preview Timeline</a>
       </div>
     </div>
+
+    <form action="/meeting/<%= id %>" method="POST">
+      <input type="hidden" name="meeting_id" value="<%= id %>"/>
+
+      <!-- Navigation Tabs -->
+      <ul class="nav nav-tabs" id="configTabs" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="basics-tab" data-toggle="tab" href="#basics" role="tab" aria-controls="basics" aria-selected="true">
+            📋 Meeting Basics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="agenda-tab" data-toggle="tab" href="#agenda" role="tab" aria-controls="agenda" aria-selected="false">
+            🎯 Agenda Items
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="visual-tab" data-toggle="tab" href="#visual" role="tab" aria-controls="visual" aria-selected="false">
+            🎨 Visual Settings
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="advanced-tab" data-toggle="tab" href="#advanced" role="tab" aria-controls="advanced" aria-selected="false">
+            ⚙️ Advanced Config
+          </a>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="configTabContent">
+        
+        <!-- BASICS TAB -->
+        <div class="tab-pane fade show active" id="basics" role="tabpanel">
+          <div class="config-section">
+            <h5>📋 Meeting Information</h5>
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="title" class="form-label">Mission Title</label>
+                <input type="text" name="title" class="form-control form-control-lg" id="title" 
+                       placeholder="e.g., Sprint Planning Mission Alpha" value="<%= meeting.title %>" required>
+                <small class="form-text text-muted">This will be displayed prominently on your timeline</small>
+              </div>
+
+              <div class="col-md-4">
+                <label for="start" class="form-label">Launch Time</label>
+                <div class="input-group">
+                  <input name="start_time" class="form-control" value="<%= meeting.start_time %>" placeholder="9:00 AM">
+                  <span class="input-group-text"><i class="fa fa-clock"></i></span>
+                </div>
+                <small class="form-text text-muted">Format: 9:00 AM or 21:00</small>
+              </div>
+
+              <div class="col-md-4">
+                <label for="timezone" class="form-label">Mission Control Timezone</label>
+                <select class="form-control" name="timezone" id="timezone" required>
+                  <option value="<%= meeting.timezone %>"><%= meeting.timezone %></option>
+                  <%  all_timezones.forEach(function(tz,index) { %>
+                    <option><%= tz %></option>
+                  <% }); %>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label for="background" class="form-label">Chroma Key Background</label>
+                <div class="input-group">
+                  <input type="color" id="backgroundPicker" class="form-control form-control-color" 
+                         value="#<%= meeting.background %>" style="width: 56px;">
+                  <input type="text" id="background" name="background" class="form-control" 
+                         value="<%= meeting.background %>" 
+                         pattern="^[0-9A-Fa-f]{6}$" 
+                         title="Enter a 6-digit hex color code (e.g., 0047BB)"
+                         placeholder="0047BB">
+                </div>
+                <small class="form-text text-muted">6-digit hex color for OBS chroma key (without #)</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AGENDA TAB -->
+        <div class="tab-pane fade" id="agenda" role="tabpanel">
+          <div class="config-section">
+            <h5>🎯 Mission Objectives</h5>
+            <p class="text-muted">Define your meeting segments with speakers, topics, and durations</p>
+
+            <!-- Add new agenda item form -->
+            <div class="row g-3 mb-3 p-3 border rounded bg-light">
+              <div class="col-md-4">
+                <label for="person1" class="form-label">👤 Speaker</label>
+                <input type="text" class="form-control" id="person1" placeholder="e.g., Sarah Johnson">
+              </div>
+              <div class="col-md-5">
+                <label for="topic1" class="form-label">💬 Topic</label>
+                <input type="text" class="form-control" id="topic1" placeholder="e.g., Sprint Retrospective">
+              </div>
+              <div class="col-md-2">
+                <label for="duration1" class="form-label">⏱️ Minutes</label>
+                <input type="number" class="form-control" id="duration1" placeholder="15" min="1" max="180">
+              </div>
+              <div class="col-md-1 d-flex align-items-end">
+                <button id="add" class="btn btn-success add-more" type="button">➕ Add</button>
+              </div>
+            </div>
+
+            <!-- Existing agenda items -->
+            <h6 class="text-muted mb-3">📝 Current Agenda (drag to reorder)</h6>
+            <ul class="list-group" id="demo1">
+              <template id="meetingItemTemplate">
+                <li class="list-group-item d-flex align-items-center" name="field" type="text">
+                  <div class="flex-grow-1 row g-2">
+                    <div class="col-md-3">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">👤</span>
+                        <input type="text" class="form-control" name="person" value="{person}" placeholder="Speaker">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">💬</span>
+                        <input type="text" class="form-control" name="topic" value="{topic}" placeholder="Topic">
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">⏱️</span>
+                        <input type="number" class="form-control" name="duration" value="{duration}" min="1" max="180">
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn btn-outline-danger btn-sm ms-2 remove-me" type="button">🗑️</button>
+                </li>
+              </template>
+
+              <% if (Array.isArray(meeting.person)) { %>
+                <% meeting.person.forEach(function(person,index) { %>
+                  <li class="list-group-item d-flex align-items-center" name="field" type="text">
+                    <div class="flex-grow-1 row g-2">
+                      <div class="col-md-3">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text">👤</span>
+                          <input type="text" class="form-control" name="person" value="<%= person %>" placeholder="Speaker">
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text">💬</span>
+                          <input type="text" class="form-control" name="topic" value="<%= meeting.topic[index] %>" placeholder="Topic">
+                        </div>
+                      </div>
+                      <div class="col-md-2">
+                        <div class="input-group input-group-sm">
+                          <span class="input-group-text">⏱️</span>
+                          <input type="number" class="form-control" name="duration" value="<%= meeting.duration[index] %>" min="1" max="180">
+                        </div>
+                      </div>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm ms-2 remove-me" type="button">🗑️</button>
+                  </li>
+                <% }); %>
+              <% } else { %>
+                <li class="list-group-item d-flex align-items-center" name="field" type="text">
+                  <div class="flex-grow-1 row g-2">
+                    <div class="col-md-3">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">👤</span>
+                        <input type="text" class="form-control" name="person" value="<%= meeting.person %>" placeholder="Speaker">
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">💬</span>
+                        <input type="text" class="form-control" name="topic" value="<%= meeting.topic %>" placeholder="Topic">
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text">⏱️</span>
+                        <input type="number" class="form-control" name="duration" value="<%= meeting.duration %>" min="1" max="180">
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn btn-outline-danger btn-sm ms-2 remove-me" type="button">🗑️</button>
+                </li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
+
+        <!-- VISUAL SETTINGS TAB -->
+        <div class="tab-pane fade" id="visual" role="tabpanel">
+          <div class="config-section">
+            <h5>🎨 Visual Customization</h5>
+            
+            <!-- Font Sizes -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label for="titleFontSize" class="form-label">🏷️ Title Font Size</label>
+                <div class="d-flex align-items-center">
+                  <input type="range" class="form-range me-3" id="titleFontSize" name="titleFontSize" 
+                         min="16" max="48" value="<%= meeting.config ? meeting.config.titleFontSize : 24 %>"
+                         oninput="document.getElementById('titleSizeValue').textContent = this.value + 'px'">
+                  <span class="range-value" id="titleSizeValue"><%= meeting.config ? meeting.config.titleFontSize : 24 %>px</span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label for="blockFontSize" class="form-label">📝 Block Text Size</label>
+                <div class="d-flex align-items-center">
+                  <input type="range" class="form-range me-3" id="blockFontSize" name="blockFontSize" 
+                         min="8" max="24" value="<%= meeting.config ? meeting.config.blockFontSize : 11 %>"
+                         oninput="document.getElementById('blockSizeValue').textContent = this.value + 'px'">
+                  <span class="range-value" id="blockSizeValue"><%= meeting.config ? meeting.config.blockFontSize : 11 %>px</span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <label for="timeLabelFontSize" class="form-label">⏰ Time Label Size</label>
+                <div class="d-flex align-items-center">
+                  <input type="range" class="form-range me-3" id="timeLabelFontSize" name="timeLabelFontSize" 
+                         min="6" max="18" value="<%= meeting.config ? meeting.config.timeLabelFontSize : 10 %>"
+                         oninput="document.getElementById('timeSizeValue').textContent = this.value + 'px'">
+                  <span class="range-value" id="timeSizeValue"><%= meeting.config ? meeting.config.timeLabelFontSize : 10 %>px</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Segment Colors -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label for="completedColor" class="form-label">✅ Completed Color</label>
+                <div class="input-group">
+                  <input type="color" class="form-control form-control-color" id="completedColorPicker" 
+                         value="#<%= meeting.config ? meeting.config.colors.completed : '404040' %>" style="width: 56px;">
+                  <input type="text" class="form-control" id="completedColor" name="completedColor" 
+                         value="<%= meeting.config ? meeting.config.colors.completed : '404040' %>" 
+                         pattern="^[0-9A-Fa-f]{6}$" 
+                         title="Enter a 6-digit hex color code"
+                         placeholder="404040">
+                </div>
+                <div class="color-preview" style="background-color: #<%= meeting.config ? meeting.config.colors.completed : '404040' %>;" id="completedPreview"></div>
+              </div>
+              <div class="col-md-4">
+                <label for="currentColor" class="form-label">🔥 Current Color</label>
+                <div class="input-group">
+                  <input type="color" class="form-control form-control-color" id="currentColorPicker" 
+                         value="#<%= meeting.config ? meeting.config.colors.current : 'FF6600' %>" style="width: 56px;">
+                  <input type="text" class="form-control" id="currentColor" name="currentColor" 
+                         value="<%= meeting.config ? meeting.config.colors.current : 'FF6600' %>" 
+                         pattern="^[0-9A-Fa-f]{6}$" 
+                         title="Enter a 6-digit hex color code"
+                         placeholder="FF6600">
+                </div>
+                <div class="color-preview" style="background-color: #<%= meeting.config ? meeting.config.colors.current : 'FF6600' %>;" id="currentPreview"></div>
+              </div>
+              <div class="col-md-4">
+                <label for="upcomingColor" class="form-label">🔵 Upcoming Color</label>
+                <div class="input-group">
+                  <input type="color" class="form-control form-control-color" id="upcomingColorPicker" 
+                         value="#<%= meeting.config ? meeting.config.colors.upcoming : '0099CC' %>" style="width: 56px;">
+                  <input type="text" class="form-control" id="upcomingColor" name="upcomingColor" 
+                         value="<%= meeting.config ? meeting.config.colors.upcoming : '0099CC' %>" 
+                         pattern="^[0-9A-Fa-f]{6}$" 
+                         title="Enter a 6-digit hex color code"
+                         placeholder="0099CC">
+                </div>
+                <div class="color-preview" style="background-color: #<%= meeting.config ? meeting.config.colors.upcoming : '0099CC' %>;" id="upcomingPreview"></div>
+              </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="mb-4">
+              <label class="form-label">📊 Segment Color Preview</label>
+              <div class="timeline-segments">
+                <div class="segment" style="background-color: #<%= meeting.config ? meeting.config.colors.completed : '404040' %>; width: 80px;">✓ Done</div>
+                <div class="segment" style="background-color: #<%= meeting.config ? meeting.config.colors.current : 'FF6600' %>; width: 120px;">▶ Current</div>
+                <div class="segment" style="background-color: #<%= meeting.config ? meeting.config.colors.upcoming : '0099CC' %>; width: 100px;">○ Next</div>
+              </div>
+            </div>
+
+            <!-- Time Marker Configuration -->
+            <div class="config-section">
+              <h5>🎯 Time Marker Customization</h5>
+              <p class="text-muted">Configure the current time indicator - the most critical visual element during your meeting</p>
+              
+              <!-- Marker Colors -->
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label for="markerPrimaryColor" class="form-label">🔴 Primary Color (Line & Circle)</label>
+                  <div class="input-group">
+                    <input type="color" class="form-control form-control-color" id="markerPrimaryColorPicker" 
+                           value="#<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.primaryColor : 'FF0000' %>" style="width: 56px;">
+                    <input type="text" class="form-control" id="markerPrimaryColor" name="markerPrimaryColor" 
+                           value="<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.primaryColor : 'FF0000' %>" 
+                           pattern="^[0-9A-Fa-f]{6}$" 
+                           title="Enter a 6-digit hex color code"
+                           placeholder="FF0000">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label for="markerSecondaryColor" class="form-label">✨ Glow Color</label>
+                  <div class="input-group">
+                    <input type="color" class="form-control form-control-color" id="markerSecondaryColorPicker" 
+                           value="#<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.secondaryColor : 'FFAA00' %>" style="width: 56px;">
+                    <input type="text" class="form-control" id="markerSecondaryColor" name="markerSecondaryColor" 
+                           value="<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.secondaryColor : 'FFAA00' %>" 
+                           pattern="^[0-9A-Fa-f]{6}$" 
+                           title="Enter a 6-digit hex color code"
+                           placeholder="FFAA00">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Marker Size & Style -->
+              <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                  <label for="markerLineWidth" class="form-label">📏 Line Width</label>
+                  <div class="d-flex align-items-center">
+                    <input type="range" class="form-range me-3" id="markerLineWidth" name="markerLineWidth" 
+                           min="1" max="10" value="<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.lineWidth : 3 %>"
+                           oninput="document.getElementById('lineWidthValue').textContent = this.value + 'px'">
+                    <span class="range-value" id="lineWidthValue"><%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.lineWidth : 3 %>px</span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label for="markerCircleSize" class="form-label">⭕ Circle Size</label>
+                  <div class="d-flex align-items-center">
+                    <input type="range" class="form-range me-3" id="markerCircleSize" name="markerCircleSize" 
+                           min="3" max="20" value="<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.circleSize : 8 %>"
+                           oninput="document.getElementById('circleSizeValue').textContent = this.value + 'px'">
+                    <span class="range-value" id="circleSizeValue"><%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.circleSize : 8 %>px</span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label for="markerHeight" class="form-label">📐 Marker Height</label>
+                  <div class="d-flex align-items-center">
+                    <input type="range" class="form-range me-3" id="markerHeight" name="markerHeight" 
+                           min="50" max="200" value="<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.height : 100 %>"
+                           oninput="document.getElementById('heightValue').textContent = this.value + 'px'">
+                    <span class="range-value" id="heightValue"><%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.height : 100 %>px</span>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label for="markerStyle" class="form-label">🎨 Marker Style</label>
+                  <select class="form-control" id="markerStyle" name="markerStyle">
+                    <option value="modern" <%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.style === 'modern' ? 'selected' : '' %>>🔴 Modern</option>
+                    <option value="classic" <%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.style === 'classic' ? 'selected' : '' %>>⚪ Classic</option>
+                    <option value="minimal" <%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.style === 'minimal' ? 'selected' : '' %>>⚫ Minimal</option>
+                    <option value="arrow" <%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.style === 'arrow' ? 'selected' : '' %>>🔶 Arrow</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Animation Settings -->
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <label for="markerPulseSpeed" class="form-label">💓 Pulse Speed</label>
+                  <div class="d-flex align-items-center">
+                    <input type="range" class="form-range me-3" id="markerPulseSpeed" name="markerPulseSpeed" 
+                           min="50" max="1000" value="<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.pulseSpeed : 200 %>"
+                           oninput="document.getElementById('pulseSpeedValue').textContent = this.value + 'ms'">
+                    <span class="range-value" id="pulseSpeedValue"><%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.pulseSpeed : 200 %>ms</span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="markerGlowIntensity" class="form-label">✨ Glow Intensity</label>
+                  <div class="d-flex align-items-center">
+                    <input type="range" class="form-range me-3" id="markerGlowIntensity" name="markerGlowIntensity" 
+                           min="0" max="1" step="0.1" value="<%= meeting.config && meeting.config.timeMarker ? meeting.config.timeMarker.glowIntensity : 0.3 %>"
+                           oninput="document.getElementById('glowIntensityValue').textContent = Math.round(this.value * 100) + '%'">
+                    <span class="range-value" id="glowIntensityValue"><%= meeting.config && meeting.config.timeMarker ? Math.round(meeting.config.timeMarker.glowIntensity * 100) : 30 %>%</span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="markerTextSize" class="form-label">🔤 Text Size</label>
+                  <div class="d-flex align-items-center">
+                    <input type="range" class="form-range me-3" id="markerTextSize" name="markerTextSize" 
+                           min="8" max="24" value="<%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.textStyle ? meeting.config.timeMarker.textStyle.fontSize : 14 %>"
+                           oninput="document.getElementById('textSizeValue').textContent = this.value + 'px'">
+                    <span class="range-value" id="textSizeValue"><%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.textStyle ? meeting.config.timeMarker.textStyle.fontSize : 14 %>px</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Visibility Options -->
+              <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                  <h6>👁️ Visibility Options</h6>
+                  <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="markerShowLine" name="markerShowLine" 
+                           <%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.showLine !== false ? 'checked' : '' %>>
+                    <label class="form-check-label" for="markerShowLine">📏 Show Line</label>
+                  </div>
+                  <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="markerShowCircle" name="markerShowCircle" 
+                           <%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.showCircle !== false ? 'checked' : '' %>>
+                    <label class="form-check-label" for="markerShowCircle">⭕ Show Circle</label>
+                  </div>
+                  <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="markerShowGlow" name="markerShowGlow" 
+                           <%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.showGlow !== false ? 'checked' : '' %>>
+                    <label class="form-check-label" for="markerShowGlow">✨ Show Glow Effect</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="markerTextColor" class="form-label">🔤 Text Color</label>
+                  <div class="input-group">
+                    <input type="color" class="form-control form-control-color" id="markerTextColorPicker" 
+                           value="#<%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.textStyle ? meeting.config.timeMarker.textStyle.color : 'FFFFFF' %>" style="width: 56px;">
+                    <input type="text" class="form-control" id="markerTextColor" name="markerTextColor" 
+                           value="<%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.textStyle ? meeting.config.timeMarker.textStyle.color : 'FFFFFF' %>" 
+                           pattern="^[0-9A-Fa-f]{6}$" 
+                           title="Enter a 6-digit hex color code"
+                           placeholder="FFFFFF">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label for="markerTextBg" class="form-label">📄 Text Background</label>
+                  <div class="input-group">
+                    <input type="color" class="form-control form-control-color" id="markerTextBgPicker" 
+                           value="#<%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.textStyle ? meeting.config.timeMarker.textStyle.backgroundColor : '000000' %>" style="width: 56px;">
+                    <input type="text" class="form-control" id="markerTextBg" name="markerTextBg" 
+                           value="<%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.textStyle ? meeting.config.timeMarker.textStyle.backgroundColor : '000000' %>" 
+                           pattern="^[0-9A-Fa-f]{6}$" 
+                           title="Enter a 6-digit hex color code"
+                           placeholder="000000">
+                  </div>
+                  <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" id="markerTextShowBg" name="markerTextShowBg" 
+                           <%= meeting.config && meeting.config.timeMarker && meeting.config.timeMarker.textStyle && meeting.config.timeMarker.textStyle.showBackground !== false ? 'checked' : '' %>>
+                    <label class="form-check-label" for="markerTextShowBg">Show Text Background</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Marker Preview -->
+              <div class="mb-3">
+                <label class="form-label">🎯 Time Marker Preview</label>
+                <div style="height: 120px; background: linear-gradient(135deg, #003080 0%, #0047BB 100%); border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                  <!-- Preview will be created with JavaScript -->
+                  <div id="markerPreview" style="position: relative;">
+                    <div id="previewLine" style="width: 3px; height: 60px; background: #FF0000; position: absolute; left: 50%; transform: translateX(-50%);"></div>
+                    <div id="previewCircle" style="width: 16px; height: 16px; background: #FF0000; border-radius: 50%; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);"></div>
+                    <div id="previewText" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); color: white; font-family: monospace; font-size: 12px;">12:34:56</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADVANCED CONFIG TAB -->
+        <div class="tab-pane fade" id="advanced" role="tabpanel">
+          <div class="config-section">
+            <h5>⚙️ Advanced Configuration</h5>
+            
+            <!-- Display Options -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <h6>🖥️ Display Options</h6>
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" id="showDebug" name="showDebug" 
+                         <%= meeting.config && meeting.config.showDebug ? 'checked' : '' %>>
+                  <label class="form-check-label" for="showDebug">🐛 Show Debug Information</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" id="showProgressBars" name="showProgressBars" 
+                         <%= meeting.config && meeting.config.showProgressBars !== false ? 'checked' : '' %>>
+                  <label class="form-check-label" for="showProgressBars">📊 Show Progress Bars</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" id="showStatusIcons" name="showStatusIcons" 
+                         <%= meeting.config && meeting.config.showStatusIcons !== false ? 'checked' : '' %>>
+                  <label class="form-check-label" for="showStatusIcons">🔴 Show Status Icons</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                  <input class="form-check-input" type="checkbox" id="showTimeLabels" name="showTimeLabels" 
+                         <%= meeting.config && meeting.config.showTimeLabels !== false ? 'checked' : '' %>>
+                  <label class="form-check-label" for="showTimeLabels">⏰ Show Time Labels</label>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <h6>📐 Layout Options</h6>
+                <div class="mb-3">
+                  <label for="segmentHeight" class="form-label">📏 Segment Height</label>
+                  <div class="d-flex align-items-center">
+                    <input type="range" class="form-range me-3" id="segmentHeight" name="segmentHeight" 
+                           min="30" max="100" value="<%= meeting.config ? meeting.config.segmentHeight : 50 %>"
+                           oninput="document.getElementById('heightValue').textContent = this.value + 'px'">
+                    <span class="range-value" id="heightValue"><%= meeting.config ? meeting.config.segmentHeight : 50 %>px</span>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="animationSpeed" class="form-label">⚡ Animation Speed</label>
+                  <div class="d-flex align-items-center">
+                    <input type="range" class="form-range me-3" id="animationSpeed" name="animationSpeed" 
+                           min="0.1" max="3.0" step="0.1" value="<%= meeting.config ? meeting.config.animationSpeed : 1.0 %>"
+                           oninput="document.getElementById('speedValue').textContent = this.value + 'x'">
+                    <span class="range-value" id="speedValue"><%= meeting.config ? meeting.config.animationSpeed : 1.0 %>x</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="d-grid gap-2 mt-4">
+        <button class="btn btn-primary btn-lg" type="submit">🚀 Launch Mission Configuration</button>
+      </div>
+    </form>
   </main>
 </div>
+
+<script>
+  // Color picker synchronization with proper validation
+  // React-style approach: State synchronization, proper event handling, validation feedback
+  function syncColorPickers() {
+    const colorPairs = [
+      ['backgroundPicker', 'background'],
+      ['completedColorPicker', 'completedColor'],
+      ['currentColorPicker', 'currentColor'],
+      ['upcomingColorPicker', 'upcomingColor'],
+      ['markerPrimaryColorPicker', 'markerPrimaryColor'],
+      ['markerSecondaryColorPicker', 'markerSecondaryColor'],
+      ['markerTextColorPicker', 'markerTextColor'],
+      ['markerTextBgPicker', 'markerTextBg']
+    ];
+
+    colorPairs.forEach(([picker, input]) => {
+      const pickerEl = document.getElementById(picker);
+      const inputEl = document.getElementById(input);
+      
+      if (pickerEl && inputEl) {
+        // Sync color picker to text input
+        pickerEl.addEventListener('input', () => {
+          const hexValue = pickerEl.value.substring(1).toUpperCase(); // Remove # and uppercase
+          inputEl.value = hexValue;
+          inputEl.classList.remove('is-invalid');
+          updatePreview();
+          updateColorPreview(input, hexValue);
+        });
+        
+        // Sync text input to color picker with validation
+        inputEl.addEventListener('input', () => {
+          const value = inputEl.value.replace('#', '').toUpperCase();
+          inputEl.value = value; // Ensure no # and uppercase
+          
+          if (value.match(/^[0-9A-F]{6}$/)) {
+            pickerEl.value = '#' + value;
+            inputEl.classList.remove('is-invalid');
+            inputEl.classList.add('is-valid');
+            updatePreview();
+            updateColorPreview(input, value);
+          } else if (value.length > 0) {
+            inputEl.classList.remove('is-valid');
+            inputEl.classList.add('is-invalid');
+          } else {
+            inputEl.classList.remove('is-valid', 'is-invalid');
+          }
+        });
+
+        // Initialize with current value
+        const currentValue = inputEl.value.replace('#', '').toUpperCase();
+        if (currentValue.match(/^[0-9A-F]{6}$/)) {
+          pickerEl.value = '#' + currentValue;
+          inputEl.value = currentValue;
+        }
+      }
+    });
+  }
+
+  function updateColorPreview(inputId, hexValue) {
+    const previewId = inputId.replace('Color', 'Preview');
+    const previewEl = document.getElementById(previewId);
+    if (previewEl && hexValue.match(/^[0-9A-F]{6}$/)) {
+      previewEl.style.backgroundColor = '#' + hexValue;
+    }
+  }
+
+  function updatePreview() {
+    const completedEl = document.getElementById('completedColor');
+    const currentEl = document.getElementById('currentColor');
+    const upcomingEl = document.getElementById('upcomingColor');
+    
+    if (completedEl && currentEl && upcomingEl) {
+      const completed = completedEl.value;
+      const current = currentEl.value;
+      const upcoming = upcomingEl.value;
+      
+      const segments = document.querySelectorAll('.timeline-segments .segment');
+      if (segments.length >= 3) {
+        if (completed.match(/^[0-9A-F]{6}$/)) segments[0].style.backgroundColor = '#' + completed;
+        if (current.match(/^[0-9A-F]{6}$/)) segments[1].style.backgroundColor = '#' + current;
+        if (upcoming.match(/^[0-9A-F]{6}$/)) segments[2].style.backgroundColor = '#' + upcoming;
+      }
+    }
+    
+    // Update marker preview
+    updateMarkerPreview();
+  }
+
+  // Time Marker Preview Update Function
+  function updateMarkerPreview() {
+    const previewLine = document.getElementById('previewLine');
+    const previewCircle = document.getElementById('previewCircle');
+    const previewText = document.getElementById('previewText');
+    
+    if (!previewLine || !previewCircle || !previewText) return;
+    
+    // Get current values
+    const primaryColor = document.getElementById('markerPrimaryColor')?.value || 'FF0000';
+    const lineWidth = document.getElementById('markerLineWidth')?.value || 3;
+    const circleSize = document.getElementById('markerCircleSize')?.value || 8;
+    const height = document.getElementById('markerHeight')?.value || 100;
+    const style = document.getElementById('markerStyle')?.value || 'modern';
+    const textColor = document.getElementById('markerTextColor')?.value || 'FFFFFF';
+    const textSize = document.getElementById('markerTextSize')?.value || 14;
+    const showLine = document.getElementById('markerShowLine')?.checked !== false;
+    const showCircle = document.getElementById('markerShowCircle')?.checked !== false;
+    
+    // Scale down for preview (60% of actual size)
+    const scale = 0.6;
+    const scaledHeight = Math.min(height * scale, 80); // Max 80px for preview container
+    const scaledCircleSize = circleSize * scale;
+    const scaledLineWidth = Math.max(1, lineWidth * scale);
+    
+    // Update line
+    previewLine.style.display = showLine ? 'block' : 'none';
+    previewLine.style.width = scaledLineWidth + 'px';
+    previewLine.style.height = scaledHeight + 'px';
+    previewLine.style.background = '#' + primaryColor;
+    
+    // Update circle based on style
+    previewCircle.style.display = showCircle ? 'block' : 'none';
+    previewCircle.style.background = '#' + primaryColor;
+    
+    if (style === 'modern') {
+      previewCircle.style.width = (scaledCircleSize * 2) + 'px';
+      previewCircle.style.height = (scaledCircleSize * 2) + 'px';
+      previewCircle.style.borderRadius = '50%';
+      previewCircle.style.border = 'none';
+    } else if (style === 'classic') {
+      previewCircle.style.width = (scaledCircleSize * 2) + 'px';
+      previewCircle.style.height = (scaledCircleSize * 2) + 'px';
+      previewCircle.style.borderRadius = '50%';
+      previewCircle.style.border = '2px solid white';
+    } else if (style === 'minimal') {
+      previewCircle.style.width = scaledCircleSize + 'px';
+      previewCircle.style.height = scaledCircleSize + 'px';
+      previewCircle.style.borderRadius = '50%';
+      previewCircle.style.border = 'none';
+    } else if (style === 'arrow') {
+      previewCircle.style.width = (scaledCircleSize * 1.5) + 'px';
+      previewCircle.style.height = (scaledCircleSize * 1.5) + 'px';
+      previewCircle.style.borderRadius = '0';
+      previewCircle.style.transform = 'translate(-50%, -50%) rotate(45deg)';
+      previewCircle.style.border = 'none';
+    } else {
+      previewCircle.style.transform = 'translate(-50%, -50%)';
+    }
+    
+    // Update text
+    previewText.style.color = '#' + textColor;
+    previewText.style.fontSize = (textSize * scale) + 'px';
+    previewText.style.top = -(scaledHeight / 2 + 20) + 'px';
+    
+    // Update text background visibility
+    const showTextBg = document.getElementById('markerTextShowBg')?.checked;
+    const textBgColor = document.getElementById('markerTextBg')?.value || '000000';
+    if (showTextBg) {
+      previewText.style.backgroundColor = 'rgba(' + 
+        parseInt(textBgColor.slice(0,2), 16) + ',' +
+        parseInt(textBgColor.slice(2,4), 16) + ',' +
+        parseInt(textBgColor.slice(4,6), 16) + ', 0.7)';
+      previewText.style.padding = '2px 6px';
+      previewText.style.borderRadius = '3px';
+    } else {
+      previewText.style.backgroundColor = 'transparent';
+      previewText.style.padding = '0';
+      previewText.style.borderRadius = '0';
+    }
+  }
+
+  // Form validation helper
+  function validateForm() {
+    const requiredFields = ['title', 'start_time', 'timezone', 'background'];
+    let isValid = true;
+
+    requiredFields.forEach(fieldName => {
+      const field = document.querySelector(`[name="${fieldName}"]`);
+      if (field && !field.value.trim()) {
+        field.classList.add('is-invalid');
+        isValid = false;
+      } else if (field) {
+        field.classList.remove('is-invalid');
+      }
+    });
+
+    return isValid;
+  }
+
+  // Initialize everything when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    syncColorPickers();
+    updatePreview();
+
+    // Add real-time update listeners for marker controls
+    const markerControls = [
+      'markerPrimaryColor', 'markerSecondaryColor', 'markerLineWidth',
+      'markerCircleSize', 'markerHeight', 'markerStyle', 'markerPulseSpeed',
+      'markerGlowIntensity', 'markerTextSize', 'markerTextColor', 'markerTextBg',
+      'markerShowLine', 'markerShowCircle', 'markerShowGlow', 'markerTextShowBg'
+    ];
+    
+    markerControls.forEach(controlId => {
+      const control = document.getElementById(controlId);
+      if (control) {
+        control.addEventListener('input', updateMarkerPreview);
+        control.addEventListener('change', updateMarkerPreview);
+      }
+    });
+
+    // Add form validation on submit
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        if (!validateForm()) {
+          e.preventDefault();
+          alert('Please fill in all required fields with valid values.');
+        }
+      });
+    }
+  });
+</script>
 
 
   <% include meeting_footer %>
