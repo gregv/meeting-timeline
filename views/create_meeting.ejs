@@ -43,7 +43,13 @@
                 </p>
               </div>
 
-              <small class="text-muted">{id}</small>
+              <small class="text-muted">
+                <a class="small copy-link-btn" 
+                   href="#" 
+                   title="Click to copy meeting link">
+                  {id}
+                </a>
+              </small>
               <small>
               <a class="btn btn-sm" href="/meeting/{id}"><img src="/images/eye.svg" alt="View the published timeline"/></a>
               <br>
@@ -230,6 +236,30 @@
 
   <% include meeting_footer %>
   <script src="/js/create_meeting.js"></script>
+  <script>
+    // Add click handler for copying meeting links
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('copy-link-btn')) {
+        e.preventDefault();
+        const meetingId = e.target.textContent.trim();
+        const meetingUrl = `${window.location.origin}/meeting/${meetingId}`;
+        
+        navigator.clipboard.writeText(meetingUrl).then(function() {
+          const originalText = e.target.textContent;
+          e.target.textContent = 'Copied!';
+          e.target.style.color = 'green';
+          
+          setTimeout(function() {
+            e.target.textContent = originalText;
+            e.target.style.color = '';
+          }, 2000);
+        }).catch(function(err) {
+          console.error('Failed to copy: ', err);
+        });
+      }
+    });
+  </script>
 
   </body>
+</html>
 </html>
