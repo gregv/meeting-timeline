@@ -6,7 +6,7 @@
     <meta name="description" content="Meeting Timeline - turn your meetings into a SpaceX Launch!">
     <meta name="author" content="Greg Vanoni">
 
-    <title>Meeting Timeline - Home</title>
+    <title>AgendaClock - Home</title>
     <% include meeting_header %>
   </head>
   <body class="bg-light">
@@ -30,7 +30,10 @@
           <template id="meetingListTemplate">
             <li class="list-group-item d-flex justify-content-between lh-sm">
               <div>
-                <h6 class="my-0"><a href="/meeting/{id}">{title}</a></h6>
+                <h6 class="my-0">
+                  <a href="/meeting/{id}">{title}</a>
+                  {public_badge}
+                </h6>
 
                 <small class="text-muted">{num_topics} topic{s}</small>
                 -
@@ -132,6 +135,16 @@
 
               <div class="invalid-feedback">
                 Please select a valid icon
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="is_public" id="is_public">
+                <label class="form-check-label" for="is_public">
+                  <strong>Make this meeting publicly shareable</strong><br>
+                  <small class="text-muted">Anyone with the meeting ID can view this timeline after logging in. Only you can edit it.</small>
+                </label>
               </div>
             </div>
 

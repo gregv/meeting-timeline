@@ -32,6 +32,8 @@ RUN if [ -f package-lock.json ]; then \
 # Copy application code
 COPY . .
 
+# Remove the .env file 
+RUN rm -f .env
 
 # Final stage for app image
 FROM base

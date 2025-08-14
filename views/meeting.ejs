@@ -4,21 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y3J1YKM9S6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-Y3J1YKM9S6');
+  </script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/8.4.1/pixi.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js"></script>
+  
+  <!-- Analytics tracking utility -->
+  <script src="/js/analytics.js"></script>
 </head>
 <body style="margin: 0; padding: 0; background-color: #<%= background %>; overflow: hidden;">
 
-  <div id="controls" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">
-    <button id="zoomIn" style="font-size: 18px; margin: 0 5px; padding: 5px 10px; cursor: pointer;">+</button>
-    <button id="zoomOut" style="font-size: 18px; margin: 0 5px; padding: 5px 10px; cursor: pointer;">-</button>
-    <button id="resetView" style="font-size: 18px; margin: 0 5px; padding: 5px 10px; cursor: pointer;">Reset</button>
+  <!-- Modern scroll-based zoom controls with auto-hide and dismiss -->
+  <div id="zoomHelp" style="position: absolute; top: 10px; right: 10px; z-index: 1000; background: rgba(0,0,0,0.7); color: white; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 11px; opacity: 0.8; transition: opacity 1s ease-out; cursor: pointer;">
+    🖱️ Scroll to zoom • Double-click to reset • R to reset
+    <span id="dismissHelp" style="margin-left: 8px; opacity: 0.6; font-size: 10px;">✕</span>
   </div>
 
-  <div id="debug" style="position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.7); color: white; padding: 10px; font-family: monospace; font-size: 12px; max-width: 300px; display: <%= config.showDebug ? 'block' : 'none' %>;">
-    <div>Debug Info:</div>
-    <div id="debugContent"></div>
+  <div id="debug" style="position: fixed; top: 10px; left: 10px; z-index: 2000; background: rgba(0,0,0,0.9); color: white; padding: 10px; font-family: monospace; font-size: 11px; max-width: 400px; max-height: 300px; overflow-y: auto; border: 1px solid #333; border-radius: 4px; display: <%= config.showDebug ? 'block' : 'none' %>;">
+    <div style="font-weight: bold; margin-bottom: 5px;">🐛 Debug Info:</div>
+    <div id="debugContent" style="line-height: 1.2;"></div>
   </div>
 
   <script>
@@ -35,11 +48,21 @@
 
     console.log("Raw meeting data:", meetingData);
     
-    // Debug timezone handling
+    // Enhanced debug system - respects config setting
     const debugDiv = document.getElementById('debugContent');
+    const debugContainer = document.getElementById('debug');
+    const isDebugEnabled = meetingData.config.showDebug;
+    
     function addDebug(text) {
-      console.log(text);
-      debugDiv.innerHTML += text + '<br>';
+      console.log('DEBUG:', text);
+      if (debugDiv && isDebugEnabled) {
+        debugDiv.innerHTML += text + '<br>';
+        debugDiv.scrollTop = debugDiv.scrollHeight; // Auto-scroll to bottom
+      }
+    }
+    
+    if (isDebugEnabled) {
+      addDebug('🚀 Enhanced debug mode enabled');
     }
     
     addDebug(`Original start: ${meetingData.start}`);
@@ -60,44 +83,94 @@
     addDebug(`Total duration: ${totalDurationMinutes} minutes`);
     addDebug(`Meeting end time: ${endTime.format('YYYY-MM-DD HH:mm:ss Z')}`);
 
-    // Initialize PixiJS Application with async/await pattern
+    // Initialize PixiJS Application with proper sizing control
     (async () => {
+
+      // Get actual viewport dimensions
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      addDebug(`Viewport dimensions: ${viewportWidth}x${viewportHeight}`);
 
       // Create PixiJS application using modern initialization
       const app = new PIXI.Application();
       
-      // Initialize the application with PixiJS 8.x syntax
+      // Initialize the application with explicit dimensions (no auto-resize conflicts)
       await app.init({
-        width: window.innerWidth,
-        height: 400,
+        width: viewportWidth,
+        height: viewportHeight,
         background: parseInt(meetingData.background),
-        resolution: window.devicePixelRatio || 1,
-        resizeTo: window
+        resolution: window.devicePixelRatio || 1
       });
       
       // Append the application canvas to the document body
       document.body.appendChild(app.canvas);
+      
+      // Force canvas to fill viewport (override any CSS issues)
+      app.canvas.style.width = '100vw';
+      app.canvas.style.height = '100vh';
+      app.canvas.style.position = 'fixed';
+      app.canvas.style.top = '0';
+      app.canvas.style.left = '0';
+
+      // Wait multiple frames to ensure everything is settled
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      // Verify final canvas dimensions
+      const canvasWidth = app.screen.width;
+      const canvasHeight = app.screen.height;
+      
+      addDebug(`Final canvas dimensions: ${canvasWidth}x${canvasHeight}`);
+      addDebug(`Canvas element size: ${app.canvas.width}x${app.canvas.height}`);
+      addDebug(`Canvas style size: ${app.canvas.style.width}x${app.canvas.style.height}`);
 
       // Create main timeline container
       const timeline = new PIXI.Container();
       app.stage.addChild(timeline);
-
-      // Timeline configuration
       const nodeRadius = 10;
       const lineHeight = 4;
-      const yPosition = app.screen.height / 2;
+      const yPosition = canvasHeight / 2; // Center vertically in the viewport
       const startX = 50;
-      const endX = app.screen.width - 100; // Leave more space on the right
-      const timelineWidth = endX - startX;
+      const endX = canvasWidth - 100; // Leave more space on the right
+      const timelineWidth = Math.max(100, endX - startX); // Ensure minimum width
 
+      addDebug(`Canvas dimensions: ${canvasWidth}x${canvasHeight}`);
       addDebug(`Timeline dimensions: ${startX} to ${endX} (width: ${timelineWidth})`);
+      addDebug(`Timeline Y position: ${yPosition}`);
 
-      // Draw base timeline
+      // Draw base timeline with debug markers
       const baseTimeline = new PIXI.Graphics();
       baseTimeline.stroke({ width: lineHeight, color: 0xFFFFFF });
       baseTimeline.moveTo(startX, yPosition);
       baseTimeline.lineTo(endX, yPosition);
       timeline.addChild(baseTimeline);
+      
+      // Enhanced visual debug markers - respects config setting
+      if (isDebugEnabled) {
+        // Draw timeline boundary box
+        const debugBounds = new PIXI.Graphics();
+        debugBounds.stroke({ width: 2, color: 0xFF0000, alpha: 0.5 });
+        debugBounds.rect(startX - 10, yPosition - 50, timelineWidth + 20, 100);
+        timeline.addChild(debugBounds);
+        
+        // Draw center markers
+        const centerMarker = new PIXI.Graphics();
+        centerMarker.stroke({ width: 1, color: 0x00FF00 });
+        centerMarker.moveTo(startX + timelineWidth/2, yPosition - 30);
+        centerMarker.lineTo(startX + timelineWidth/2, yPosition + 30);
+        timeline.addChild(centerMarker);
+        
+        // Draw canvas center marker
+        const canvasCenterMarker = new PIXI.Graphics();
+        canvasCenterMarker.stroke({ width: 2, color: 0x00FFFF });
+        canvasCenterMarker.moveTo(0, canvasHeight/2 - 20);
+        canvasCenterMarker.lineTo(canvasWidth, canvasHeight/2 - 20);
+        canvasCenterMarker.moveTo(canvasWidth/2, 0);
+        canvasCenterMarker.lineTo(canvasWidth/2, canvasHeight);
+        app.stage.addChild(canvasCenterMarker);
+        
+        addDebug(`🎯 Enhanced debug markers added to timeline and canvas`);
+      }
 
       // Create timeline segments for each topic with mission control aesthetics
       const segments = [];
@@ -357,28 +430,42 @@
       addDebug(`Time marker configured: ${markerConfig.style} style, ${markerConfig.primaryColor} primary, ${markerConfig.lineWidth}px line`);
       addDebug(`Precise positioning algorithm enabled - marker will sync with segment boundaries`);
 
-      // Zoom and pan functionality
+      // Enhanced zoom and pan functionality with scroll-based zoom
       let isDragging = false;
       let dragStart = { x: 0, y: 0 };
       let currentScale = 1;
 
-      // Set initial zoom to fit the entire timeline with some padding
-      const initialScale = Math.min(1, (app.screen.width - 200) / timelineWidth);
-      currentScale = initialScale;
+      // Calculate optimal initial scale to fit timeline with padding
+      const optimalScale = Math.min(1, (canvasWidth - 200) / timelineWidth);
+      currentScale = optimalScale;
       timeline.scale.set(currentScale);
       
-      // Center the timeline
-      timeline.x = (app.screen.width - timelineWidth * currentScale) / 2;
-      timeline.y = 0;
+      // Perfect centering - timeline centered both horizontally and vertically
+      const centeredX = (canvasWidth - timelineWidth * currentScale) / 2;
+      timeline.x = centeredX;
+      timeline.y = 0; // Timeline elements are positioned relative to yPosition already
 
-      addDebug(`Initial scale: ${initialScale.toFixed(2)}, Timeline centered at: ${timeline.x.toFixed(0)}`);
+      addDebug(`=== TIMELINE POSITIONING DEBUG ===`);
+      addDebug(`Canvas: ${canvasWidth}x${canvasHeight}`);
+      addDebug(`Timeline width: ${timelineWidth} (from ${startX} to ${endX})`);
+      addDebug(`Optimal scale: ${optimalScale.toFixed(3)}`);
+      addDebug(`Scaled timeline width: ${(timelineWidth * currentScale).toFixed(1)}`);
+      addDebug(`Available space: ${canvasWidth - 200}`);
+      addDebug(`Centered X position: ${centeredX.toFixed(1)}`);
+      addDebug(`Timeline final position: (${timeline.x.toFixed(1)}, ${timeline.y.toFixed(1)})`);
+      addDebug(`Timeline Y position (center): ${yPosition}`);
+      addDebug(`================================`);
 
+      // Set up interactive stage for drag functionality
       app.stage.eventMode = 'static';
       app.stage.hitArea = app.screen;
       app.stage.on('pointerdown', onDragStart)
         .on('pointerup', onDragEnd)
         .on('pointerupoutside', onDragEnd)
         .on('pointermove', onDragMove);
+
+      // Add scroll-based zoom functionality
+      app.canvas.addEventListener('wheel', onWheel, { passive: false });
 
       function onDragStart(event) {
         isDragging = true;
@@ -396,40 +483,171 @@
         }
       }
 
-      function zoom(direction) {
-        const factor = 0.2;
-        const newScale = Math.max(0.1, Math.min(3, currentScale + direction * factor));
-
+      // Modern scroll-based zoom with smooth scaling
+      function onWheel(event) {
+        event.preventDefault();
+        
+        // Get mouse position relative to the canvas
+        const rect = app.canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+        
+        // Determine zoom direction and factor
+        const zoomIntensity = 0.1;
+        const wheelDirection = event.deltaY > 0 ? -1 : 1; // Reverse for natural zoom feel
+        const zoomFactor = 1 + (wheelDirection * zoomIntensity);
+        
+        // Calculate new scale with limits
+        const newScale = Math.max(0.1, Math.min(5, currentScale * zoomFactor));
+        
         if (newScale !== currentScale) {
-          const centerX = app.screen.width / 2;
-          const centerY = app.screen.height / 2;
-          
-          // Calculate zoom center
+          // Calculate the world position under the mouse
           const worldPos = {
-            x: (centerX - timeline.x) / currentScale,
-            y: (centerY - timeline.y) / currentScale
+            x: (mouseX - timeline.x) / currentScale,
+            y: (mouseY - timeline.y) / currentScale
           };
 
+          // Update scale
           currentScale = newScale;
           timeline.scale.set(currentScale);
 
-          // Adjust position to maintain zoom center
-          timeline.x = centerX - worldPos.x * currentScale;
-          timeline.y = centerY - worldPos.y * currentScale;
+          // Adjust position to keep mouse point fixed during zoom
+          timeline.x = mouseX - worldPos.x * currentScale;
+          timeline.y = mouseY - worldPos.y * currentScale;
+          
+          // Track zoom interaction for analytics
+          if (window.analytics) {
+            window.analytics.trackScrollZoom(wheelDirection > 0 ? 'in' : 'out', currentScale);
+          }
+          
+          addDebug(`Scroll zoom: ${wheelDirection > 0 ? 'IN' : 'OUT'} to ${currentScale.toFixed(2)}x at mouse (${mouseX}, ${mouseY})`);
+          
+          // Show zoom level indicator temporarily (for UX feedback)
+          if (zoomHelp) {
+            const originalText = zoomHelp.textContent;
+            zoomHelp.textContent = `🖱️ Zoom: ${currentScale.toFixed(1)}x • Double-click to reset`;
+            zoomHelp.style.opacity = '0.9';
+            setTimeout(() => {
+              zoomHelp.textContent = originalText;
+              zoomHelp.style.opacity = '0.8';
+            }, 1500);
+          }
         }
       }
 
-      function resetView() {
-        const resetScale = Math.min(1, (app.screen.width - 200) / timelineWidth);
+      // Double-click to reset to optimal view
+      app.canvas.addEventListener('dblclick', resetToOptimalView);
+      
+      function resetToOptimalView() {
+        const resetScale = Math.min(1, (canvasWidth - 200) / timelineWidth);
         currentScale = resetScale;
         timeline.scale.set(currentScale);
-        timeline.x = (app.screen.width - timelineWidth * currentScale) / 2;
+        
+        // Re-center perfectly
+        timeline.x = (canvasWidth - timelineWidth * currentScale) / 2;
         timeline.y = 0;
+        
+        // Track reset for analytics
+        if (window.analytics) {
+          window.analytics.trackZoomReset('double_click');
+        }
+        
+        addDebug(`Double-click reset: Timeline reset to optimal view (${currentScale.toFixed(2)}x)`);
       }
 
-      document.getElementById('zoomIn').addEventListener('click', () => zoom(1));
-      document.getElementById('zoomOut').addEventListener('click', () => zoom(-1));
-      document.getElementById('resetView').addEventListener('click', resetView);
+      // Keyboard shortcuts for accessibility
+      document.addEventListener('keydown', (event) => {
+        if (event.code === 'KeyR' && !event.ctrlKey && !event.metaKey) {
+          event.preventDefault();
+          resetToOptimalView();
+        }
+      });
+
+      // Auto-hide zoom help with dismiss functionality
+      const zoomHelp = document.getElementById('zoomHelp');
+      const dismissHelp = document.getElementById('dismissHelp');
+      let helpTimeout;
+      let isHelpDismissed = localStorage.getItem('zoomHelpDismissed') === 'true';
+      
+      function showZoomHelp() {
+        if (zoomHelp && !isHelpDismissed) {
+          zoomHelp.style.opacity = '0.8';
+          clearTimeout(helpTimeout);
+          helpTimeout = setTimeout(() => {
+            zoomHelp.style.opacity = '0.3';
+          }, 3000);
+        }
+      }
+      
+      function hideZoomHelp() {
+        if (zoomHelp && !isHelpDismissed) {
+          clearTimeout(helpTimeout);
+          helpTimeout = setTimeout(() => {
+            zoomHelp.style.opacity = '0.1';
+          }, 5000);
+        }
+      }
+
+      function dismissZoomHelp() {
+        if (zoomHelp) {
+          zoomHelp.style.opacity = '0';
+          setTimeout(() => {
+            zoomHelp.style.display = 'none';
+          }, 1000);
+          localStorage.setItem('zoomHelpDismissed', 'true');
+          isHelpDismissed = true;
+          
+          // Track dismissal for analytics
+          if (window.analytics) {
+            window.analytics.trackFeatureUsage('zoom_help_dismissed');
+          }
+        }
+      }
+
+      // Set up dismiss functionality
+      if (zoomHelp && dismissHelp) {
+        // Click anywhere on help to dismiss
+        zoomHelp.addEventListener('click', dismissZoomHelp);
+        
+        // Hover effects for better UX
+        zoomHelp.addEventListener('mouseenter', () => {
+          if (!isHelpDismissed) {
+            dismissHelp.style.opacity = '1';
+            zoomHelp.style.opacity = '0.9';
+          }
+        });
+        
+        zoomHelp.addEventListener('mouseleave', () => {
+          if (!isHelpDismissed) {
+            dismissHelp.style.opacity = '0.6';
+          }
+        });
+      }
+
+      // Show help on first interaction, then fade
+      let hasInteracted = false;
+      function onFirstInteraction() {
+        if (!hasInteracted) {
+          hasInteracted = true;
+          showZoomHelp();
+        }
+      }
+
+      // Initialize help visibility based on dismissal state
+      if (isHelpDismissed) {
+        if (zoomHelp) {
+          zoomHelp.style.display = 'none';
+        }
+      } else {
+        hideZoomHelp();
+        
+        // Show help when mouse enters canvas area
+        if (app.canvas) {
+          app.canvas.addEventListener('mouseenter', showZoomHelp);
+          app.canvas.addEventListener('wheel', onFirstInteraction);
+          app.canvas.addEventListener('dblclick', onFirstInteraction);
+        }
+      }
 
       // Enhanced animation loop with real-time segment state tracking
       let currentSegmentIndex = -1;
@@ -595,9 +813,11 @@
         }
       });
       titleText.anchor.set(0.5, 0);
-      titleText.x = app.screen.width / 2;
+      titleText.x = canvasWidth / 2;
       titleText.y = 15;
       app.stage.addChild(titleText);
+      
+      addDebug(`📝 Title positioned at: (${titleText.x}, ${titleText.y}) with canvas width: ${canvasWidth}`);
 
       // Mission status display (bottom right)
       const statusDisplay = new PIXI.Text({
@@ -610,8 +830,8 @@
         }
       });
       statusDisplay.anchor.set(1, 1);
-      statusDisplay.x = app.screen.width - 20;
-      statusDisplay.y = app.screen.height - 20;
+      statusDisplay.x = canvasWidth - 20;
+      statusDisplay.y = canvasHeight - 20;
       app.stage.addChild(statusDisplay);
 
       // Current segment info display (top center)
@@ -625,7 +845,7 @@
         }
       });
       currentSegmentDisplay.anchor.set(0.5, 0);
-      currentSegmentDisplay.x = app.screen.width / 2;
+      currentSegmentDisplay.x = canvasWidth / 2;
       currentSegmentDisplay.y = 50;
       app.stage.addChild(currentSegmentDisplay);
 
@@ -814,6 +1034,117 @@
       });
 
     })().catch(console.error);
+    
+    // Analytics tracking for meeting view and timeline interactions
+    (function() {
+      // Track meeting viewed
+      if (window.analytics) {
+        const meetingViewData = {
+          id: meetingData.title || window.location.pathname.split('/').pop(),
+          topics: meetingData.topics,
+          duration: totalDurationMinutes,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          background: meetingData.background
+        };
+        
+        // Track meeting pattern analysis
+        window.analytics.trackMeetingViewed(meetingViewData);
+        window.analytics.trackMeetingPurposePattern(meetingData.topics);
+      }
+      
+      // Track modern timeline control interactions
+      let timelineStarted = false;
+      let zoomInteractionCount = 0;
+      
+      const trackTimelineStart = () => {
+        if (!timelineStarted && window.analytics) {
+          timelineStarted = true;
+          window.analytics.trackTimelineStarted();
+        }
+      };
+      
+      // Track scroll zoom interactions (called from onWheel function above)
+      // Note: trackScrollZoom is called directly in the onWheel function
+      
+      // Track double-click reset interactions (called from resetToOptimalView function above) 
+      // Note: trackZoomReset is called directly in the resetToOptimalView function
+      
+      // Track keyboard shortcuts
+      document.addEventListener('keydown', (event) => {
+        if (event.code === 'KeyR' && !event.ctrlKey && !event.metaKey && window.analytics) {
+          window.analytics.trackKeyboardShortcut('reset_view');
+          trackTimelineStart();
+        }
+      });
+      
+      // Track timeline completion when meeting ends
+      const checkTimelineCompletion = () => {
+        const now = moment();
+        const endTime = moment(startTime).add(totalDurationMinutes, 'minutes');
+        
+        if (now.isAfter(endTime) && timelineStarted && window.analytics) {
+          window.analytics.trackTimelineCompleted(totalDurationMinutes);
+          clearInterval(completionCheckInterval); // Stop checking
+        }
+      };
+      
+      // Check for completion every 30 seconds
+      const completionCheckInterval = setInterval(checkTimelineCompletion, 30000);
+      
+      // Check for any stored meeting creation data from form submission
+      if (sessionStorage.getItem('newMeetingData') && window.analytics) {
+        try {
+          const newMeetingData = JSON.parse(sessionStorage.getItem('newMeetingData'));
+          window.analytics.trackMeetingCreated(newMeetingData);
+          sessionStorage.removeItem('newMeetingData'); // Clean up
+        } catch (e) {
+          console.warn('Could not parse stored meeting data:', e);
+        }
+      }
+      
+      // Track performance metrics
+      if (window.analytics && window.performance) {
+        // Track page load time
+        window.addEventListener('load', () => {
+          setTimeout(() => {
+            const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+            window.analytics.trackPerformance('page_load_time', loadTime);
+          }, 0);
+        });
+        
+        // Track PixiJS initialization performance
+        const pixiInitTime = performance.now();
+        setTimeout(() => {
+          const pixiLoadTime = performance.now() - pixiInitTime;
+          if (window.analytics) {
+            window.analytics.trackPerformance('pixi_init_time', pixiLoadTime);
+          }
+        }, 1000);
+      }
+      
+      // Track any errors
+      window.addEventListener('error', (e) => {
+        if (window.analytics) {
+          window.analytics.trackError('javascript_error', e.message, {
+            filename: e.filename,
+            lineno: e.lineno,
+            colno: e.colno
+          });
+        }
+      });
+      
+      // Track feature usage based on timeline interactions
+      let dragInteractionCount = 0;
+      if (timeline) {
+        timeline.on('pointermove', () => {
+          dragInteractionCount++;
+          if (window.analytics && dragInteractionCount % 10 === 0) {
+            window.analytics.trackTimelineDrag();
+          }
+        });
+      }
+      
+    })();
 
   </script>
 </body>

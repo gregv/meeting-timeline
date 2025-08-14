@@ -166,6 +166,17 @@
                 </div>
                 <small class="form-text text-muted">6-digit hex color for OBS chroma key (without #)</small>
               </div>
+              
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" name="is_public" id="is_public" 
+                         <%= meeting.is_public ? 'checked' : '' %>>
+                  <label class="form-check-label" for="is_public">
+                    <strong>🌐 Make this meeting publicly shareable</strong><br>
+                    <small class="text-muted">Anyone with the meeting ID can view this timeline after logging in. Only you can edit it.</small>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -821,6 +832,68 @@
           e.preventDefault();
           alert('Please fill in all required fields with valid values.');
         }
+      });
+    }
+    
+    // Analytics tracking for edit meeting form
+    if (window.analytics) {
+      // Track when user starts editing the meeting
+      let editFormStarted = false;
+      $('form input, form select, form textarea').one('focus', function() {
+        if (!editFormStarted) {
+          editFormStarted = true;
+          window.analytics.trackFormStart('edit_meeting');
+          window.analytics.trackMeetingEdited('<%= id %>');
+        }
+      });
+      
+      // Track individual field interactions (throttled)
+      $('form input, form select, form textarea').on('focus', function() {
+        const fieldName = $(this).attr('name') || $(this).attr('id') || 'unknown_field';
+        window.analytics.trackFormFieldInteraction('edit_meeting', fieldName);
+      });
+      
+      // Track form validation errors
+      form.addEventListener('submit', function(e) {
+        const invalidFields = form.querySelectorAll(':invalid');
+        if (invalidFields.length > 0) {
+          invalidFields.forEach(function(field) {
+            const fieldName = field.getAttribute('name') || field.getAttribute('id') || 'unknown_field';
+            const errorMessage = field.validationMessage || 'validation_error';
+            window.analytics.trackFormValidationError('edit_meeting', fieldName, errorMessage);
+          });
+          return; // Don't track successful submit if there are errors
+        }
+        
+        // Track successful form submission
+        const formData = {
+          topics_count: $('.topic-row').length || 0,
+          timezone: $('#timezone').val() || 'unknown',
+          has_custom_background: $('#background').val() !== '#0047BB',
+          meeting_title: $('#title').val() ? 'modified' : 'empty',
+          has_visual_customizations: $('#visual input:checked, #visual input[type="range"]:not([value=""])').length > 0,
+          has_advanced_settings: $('#advanced input:checked, #advanced input[type="range"]:not([value=""])').length > 0
+        };
+        window.analytics.trackFormSubmitted('edit_meeting', formData);
+      });
+      
+      // Track feature usage for advanced configuration options
+      $('#visual input, #advanced input').on('change', function() {
+        const featureName = $(this).attr('name') || $(this).attr('id') || 'unknown_feature';
+        const featureValue = $(this).is(':checkbox') ? $(this).is(':checked') : $(this).val();
+        window.analytics.trackFeatureUsage('visual_customization', {
+          feature: featureName,
+          value: featureValue,
+          section: $(this).closest('.config-section').find('h5').text() || 'unknown'
+        });
+      });
+      
+      // Track tab usage
+      $('.nav-link').on('click', function() {
+        const tabName = $(this).text().trim();
+        window.analytics.trackFeatureUsage('edit_tab_navigation', {
+          tab: tabName
+        });
       });
     }
   });

@@ -10,14 +10,17 @@
         "body-parser": "^1.19.0",
         "crypto-js": "^4.0.0",
         "date-and-time": "*",
+        "dotenv": "^17.2.1",
         "ejs": "^1.0.0",
         "express": "^4.6.1",
+        "express-session": "^1.18.2",
         "helmet": "^4.3.1",
         "luxon": "^1.25.0",
         "moment-timezone": "^0.5.32",
+        "passport": "^0.7.0",
+        "passport-google-oauth20": "^2.0.0",
         "pixi.js": "^8.0.0",
-        "redis": "^5.8.0",
-        "redis-json": "^4.3.0"
+        "redis": "^5.8.0"
     },
     "devDependencies": {
         "@flydotio/dockerfile": "^0.7.10"

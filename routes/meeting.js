@@ -7,20 +7,74 @@ const date = require('date-and-time');
 const redis = require("redis");
 const momentTZ = require('moment-timezone');
 const sha3 = require("crypto-js/sha3");
+const { requireAuth, getUserEmail, getUserMeetingKey, getPublicMeetingKey, isUserMeetingOwner } = require('../config/auth');
 
 
-// --- Redis connection setup (fixed) ---
+// --- Redis connection setup with reconnection logic ---
 let redisSource = process.env.REDIS_URL || process.env.REDIS_HOST || "127.0.0.1";
 let client;
+let isConnecting = false;
 
+// Reconnection strategy for both URL and hostname connections
+const reconnectStrategy = (retries) => {
+  if (retries > 10) {
+    console.error("Redis reconnection failed after 10 attempts");
+    return new Error("Redis reconnection failed");
+  }
+  // Exponential backoff with jitter
+  const delay = Math.min(retries * 50, 2000) + Math.random() * 1000;
+  console.log(`Redis reconnecting in ${Math.round(delay)}ms (attempt ${retries + 1})`);
+  return delay;
+};
+
+// Create Redis client based on connection type
 if (redisSource.startsWith("redis://") || redisSource.startsWith("rediss://")) {
-  // Full URL with credentials
-  client = redis.createClient({ url: redisSource });
+  // Full URL with credentials - FIXED: use 'url' property
+  client = redis.createClient({ 
+    url: redisSource,
+    socket: {
+      reconnectStrategy: reconnectStrategy
+    }
+  });
   console.log("Using Redis URL:", redisSource);
 } else {
   // Just a hostname
-  client = redis.createClient({ host: redisSource });
+  console.log("Using Redis host:", redisSource);
+  client = redis.createClient({
+    socket: {
+      host: redisSource,
+      port: process.env.REDIS_PORT || 6379,
+      reconnectStrategy: reconnectStrategy
+    }
+  });
 }
+
+// Enhanced connection function with retry logic
+async function connectToRedis() {
+  if (isConnecting || client.isOpen) {
+    return;
+  }
+  
+  isConnecting = true;
+  try {
+    await client.connect();
+    console.log("Connected to Redis successfully");
+    isConnecting = false;
+  } catch (err) {
+    console.error("Failed to connect to Redis:", err.message);
+    isConnecting = false;
+    // Retry connection after delay
+    setTimeout(() => {
+      console.log("Retrying Redis connection...");
+      connectToRedis();
+    }, 5000);
+  }
+}
+
+// Ensure client is connected for all connection types
+connectToRedis();
+
+
 
 function maskRedis(ref) {
   try {
@@ -32,9 +86,45 @@ function maskRedis(ref) {
   }
 }
 
+// Enhanced Redis event handling
 client.on('error', (err) => {
   console.error("Redis connection error:", err.message);
 });
+
+client.on('connect', () => {
+  console.log("Redis client connected");
+});
+
+client.on('ready', () => {
+  console.log("Redis client ready to receive commands");
+});
+
+client.on('end', () => {
+  console.log("Redis connection closed");
+});
+
+client.on('reconnecting', () => {
+  console.log("Redis client reconnecting...");
+});
+
+// Helper function to ensure Redis connection before operations
+async function ensureRedisConnection() {
+  if (!client.isOpen && !isConnecting) {
+    console.log("Redis not connected, attempting to connect...");
+    await connectToRedis();
+  }
+  
+  // Wait a bit if still connecting
+  let attempts = 0;
+  while (isConnecting && attempts < 10) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+  
+  if (!client.isOpen) {
+    throw new Error("Redis connection not available");
+  }
+}
 
 // Log (sanitized) connection target once
 console.log("Connecting to Redis:", maskRedis(redisSource));
@@ -185,7 +275,9 @@ function getDataFromRedis(redis_meeting)
     "background": background,
     "timezone": redis_meeting.timezone,
     "icon": icon,
-    "config": config
+    "config": config,
+    "is_public": redis_meeting.is_public || false,
+    "owner_email": redis_meeting.owner_email || null
   }
 
   console.log("=== Normalized Data to Pass to General Parser ===");
@@ -196,14 +288,22 @@ function getDataFromRedis(redis_meeting)
 }
 
 function getData(meeting){
-  totalTime_seconds = date.subtract(meeting.end,meeting.start).toSeconds();
-  totalTime_mins = date.subtract(meeting.end,meeting.start).toMinutes();
+  // Ensure start and end are proper Date objects
+  const startDate = meeting.start instanceof Date ? meeting.start : new Date(meeting.start);
+  const endDate = meeting.end instanceof Date ? meeting.end : new Date(meeting.end);
+  
+  totalTime_seconds = date.subtract(endDate, startDate).toSeconds();
+  totalTime_mins = date.subtract(endDate, startDate).toMinutes();
 
   // Width of display should handle 1 hour meetings easily
   let windowWidth = 950;
 
   // We need to calulate how fast the marker should be moving relative to the width and total_time
   meeting.movement_rate = totalTime_seconds / windowWidth;
+  
+  // Update meeting object with proper Date objects
+  meeting.start = startDate;
+  meeting.end = endDate;
 
   let location = 0;
   let counter = 0;
@@ -219,11 +319,11 @@ function getData(meeting){
    if( counter == 0 )
    {
      location = 0;
-     element.startTime = meeting.start;
+     element.startTime = startDate;
    }
    else {
      location += prev_width;
-     element.startTime = date.addMinutes(meeting.start,prev_time);
+     element.startTime = date.addMinutes(startDate,prev_time);
    }
 
    element.width = percent_of_total_width;
@@ -234,6 +334,51 @@ function getData(meeting){
 
    counter++;
   });
+
+  // Ensure config object exists with defaults
+  if (!meeting.config) {
+    meeting.config = {
+      showDebug: false,
+      showProgressBars: true,
+      showStatusIcons: true,
+      showTimeLabels: true,
+      titleFontSize: 24,
+      blockFontSize: 11,
+      timeLabelFontSize: 10,
+      animationSpeed: 1.0,
+      segmentHeight: 50,
+      colors: {
+        completed: "404040",
+        current: "FF6600", 
+        upcoming: "0099CC",
+        completedAlpha: 0.6,
+        currentAlpha: 0.9,
+        upcomingAlpha: 0.4
+      },
+      missionControlTheme: true,
+      timeMarker: {
+        primaryColor: "FF0000",
+        secondaryColor: "FFAA00",
+        lineWidth: 3,
+        circleSize: 8,
+        height: 100,
+        glowIntensity: 0.3,
+        pulseSpeed: 200,
+        style: "modern",
+        showGlow: true,
+        showCircle: true,
+        showLine: true,
+        textStyle: {
+          fontSize: 14,
+          color: "FFFFFF",
+          backgroundColor: "000000",
+          backgroundAlpha: 0.7,
+          showBackground: true,
+          fontFamily: "monospace"
+        }
+      }
+    };
+  }
 
   return meeting;
 }
@@ -250,13 +395,15 @@ function get_short_hash()
 
 
 
-router.get('/list', (req, res) => {
-  console.log("/list called");
+router.get('/list', requireAuth, async (req, res) => {
+  console.log("/list called for user:", getUserEmail(req));
 
   var recent_meeting_ids = [];
 
-  client.keys('meeting_*', function (err, keys) {
-    if (err) return console.log(err);
+  try {
+    await ensureRedisConnection();
+    const userEmail = getUserEmail(req);
+    const keys = await client.keys(`meeting_${userEmail}_*`);
 
     if( keys.length == 0 )
     {
@@ -264,37 +411,56 @@ router.get('/list', (req, res) => {
     }
 
     // Get more details from redis for each key
-    client.mget(keys, function (err, meeting_infos) {
-      if (err) return console.log(err);
+    const meeting_infos = await client.mGet(keys);
 
-      meeting_infos.forEach((item, i) => {
+    meeting_infos.forEach((item, i) => {
+      if (item) {
         const meeting_details = JSON.parse(item);
         const pretty_meeting_details = getDataFromRedis(meeting_details);
-
         recent_meeting_ids.push(pretty_meeting_details);
-      });
-
-
-      res.json(recent_meeting_ids)
+      }
     });
 
-  });
+    res.json(recent_meeting_ids);
+  } catch (err) {
+    console.error('Redis error:', err);
+    res.status(500).json({error: 'Internal Server Error'});
+  }
 });
 
-router.get('/edit/:meetingId', (req, res) => {
-
+router.get('/edit/:meetingId', requireAuth, async (req, res) => {
     const meeting_id = req.params.meetingId;
-    const meeting_id_for_redis = "meeting_" + meeting_id;
+    const userEmail = getUserEmail(req);
+    const meeting_id_for_redis = getUserMeetingKey(userEmail, meeting_id);
+    const public_meeting_key = getPublicMeetingKey(meeting_id);
 
-    console.log("~~ GET /edit/meetingId REQUEST ID: " + meeting_id);
+    console.log("~~ GET /edit/meetingId REQUEST ID: " + meeting_id + " for user: " + userEmail);
 
-    // 1. Get data out of Redis
-    client.get(meeting_id_for_redis, (err, redis_data) => {
-      const meeting = JSON.parse(redis_data);
+    try {
+      await ensureRedisConnection();
+      
+      // 1. First try to get user's private meeting
+      let redis_data = await client.get(meeting_id_for_redis);
+      let meeting = null;
+      
+      if (redis_data) {
+        meeting = JSON.parse(redis_data);
+      } else {
+        // 2. If not found, check if it's a public meeting
+        redis_data = await client.get(public_meeting_key);
+        if (redis_data) {
+          const publicMeeting = JSON.parse(redis_data);
+          
+          // Check if user is the owner of the public meeting
+          if (!isUserMeetingOwner(userEmail, meeting_id, publicMeeting)) {
+            return res.status(403).send('Access denied: You can only edit meetings you created');
+          }
+          meeting = publicMeeting;
+        }
+      }
 
-      if( meeting == null )
-      {
-       return res.send(404);
+      if (!meeting) {
+        return res.status(404).send('Meeting not found');
       }
 
       // Reconstruct config object from form data (which is stored flat in Redis)
@@ -353,40 +519,53 @@ router.get('/edit/:meetingId', (req, res) => {
         all_timezones: momentTZ.tz.names(),
         meeting: meeting
       });
-
-    });
+    } catch (err) {
+      console.error('Redis error:', err);
+      res.status(500).send('Internal Server Error');
+    }
 });
 
 
-router.get('/:meetingId', (req, res) => {
+router.get('/:meetingId', requireAuth, async (req, res) => {
     const meeting_id = req.params.meetingId;
-    const meeting_id_for_redis = "meeting_" + meeting_id;
-    console.log("~~ GET /meetingId REQUEST ID: " + meeting_id);
+    const userEmail = getUserEmail(req);
+    const meeting_id_for_redis = getUserMeetingKey(userEmail, meeting_id);
+    const public_meeting_key = getPublicMeetingKey(meeting_id);
+    console.log("~~ GET /meetingId REQUEST ID: " + meeting_id + " for user: " + userEmail);
 
+    try {
+      await ensureRedisConnection();
+      
+      // 1. First try to get user's private meeting
+      let redis_data = await client.get(meeting_id_for_redis);
+      let meeting = null;
+      let isPublicAccess = false;
+      
+      if (redis_data) {
+        meeting = JSON.parse(redis_data);
+      } else {
+        // 2. If not found, try to get public meeting
+        redis_data = await client.get(public_meeting_key);
+        if (redis_data) {
+          meeting = JSON.parse(redis_data);
+          isPublicAccess = true;
+        }
+      }
 
-    // 1. Get data out of Redis
-    client.get(meeting_id_for_redis, (err, redis_data) => {
+      // 3. If still no meeting found, show not found page
+      if (!meeting) {
+        return res.status(404).render('meeting_not_found', {
+          meetingId: meeting_id,
+          userEmail: userEmail
+        });
+      }
 
-      // 1a. If the key doesn't exist, use the default json
-       if (err) {
-         const meeting = fs.readFileSync('./meeting-details.json');
-
-         // 2. Parse and pass data into refinement stage
-         data = getData(meeting);
-       }
-       else {
-         // 1b. Parse the data from Redis
-         const meeting = JSON.parse(redis_data);
-
-         if( meeting == null )
-         {
-           return res.send(404);
-         }
-
-         // 2. Parse and pass data into refinement stage
-         data = getDataFromRedis(meeting);
-       }
-
+      // Parse and pass data into refinement stage
+      data = getDataFromRedis(meeting);
+      
+      // Add metadata for the template
+      data.is_public_access = isPublicAccess;
+      data.is_owner = !isPublicAccess || isUserMeetingOwner(userEmail, meeting_id, meeting);
 
       res.render('meeting',{
         id: meeting_id,
@@ -396,26 +575,70 @@ router.get('/:meetingId', (req, res) => {
         background: data.background,
         movement_rate: data.movement_rate,
         icon: data.icon,
-        config: data.config
+        config: data.config || {
+          showDebug: false,
+          showProgressBars: true,
+          showStatusIcons: true,
+          showTimeLabels: true,
+          titleFontSize: 24,
+          blockFontSize: 11,
+          timeLabelFontSize: 10
+        },
+        is_public_access: data.is_public_access || false,
+        is_owner: data.is_owner || true
       });
-    });
+    } catch (err) {
+      console.error('Redis error:', err);
+      res.status(500).send('Internal Server Error');
+    }
 });
 
 
 
 
-router.post('/:meetingId', (req, res) => {
+router.post('/:meetingId', requireAuth, async (req, res) => {
   const meeting_id = req.params.meetingId;
-    const meeting_id_for_redis = "meeting_" + meeting_id;
-    client.set(meeting_id_for_redis, JSON.stringify(req.body));
+  const userEmail = getUserEmail(req);
+  const meeting_id_for_redis = getUserMeetingKey(userEmail, meeting_id);
+  
+  try {
+    await ensureRedisConnection();
+    
+    // Add owner email and public flag to the meeting data
+    const meetingData = {
+      ...req.body,
+      owner_email: userEmail,
+      is_public: req.body.is_public === 'on' || req.body.is_public === true
+    };
+    
+    // Always save to user's private space
+    await client.set(meeting_id_for_redis, JSON.stringify(meetingData));
+    
+    // If marked as public, also save to public space
+    if (meetingData.is_public) {
+      const public_meeting_key = getPublicMeetingKey(meeting_id);
+      await client.set(public_meeting_key, JSON.stringify(meetingData));
+    } else {
+      // If changing from public to private, remove from public space
+      const public_meeting_key = getPublicMeetingKey(meeting_id);
+      await client.del(public_meeting_key);
+    }
+    
     res.redirect("/meeting/" + meeting_id);
+  } catch (err) {
+    console.error('Redis error:', err);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
-router.get('/', (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   var recent_meeting_ids = [];
-  client.keys('meeting_*', function (err, keys) {
-    if (err) return console.log(err);
-
+  
+  try {
+    await ensureRedisConnection();
+    const userEmail = getUserEmail(req);
+    const keys = await client.keys(`meeting_${userEmail}_*`);
+    
     for(var i = 0, len = keys.length; i < len; i++) {
       recent_meeting_ids.push(keys[i]);
     }
@@ -431,16 +654,16 @@ router.get('/', (req, res) => {
         timezone_selection.push(item);
       }
     });
-    // Put common ones at the top
-
-
 
     res.render('create_meeting',{
       id: get_short_hash(),
       all_timezones: timezone_selection,
       recent_meetings: recent_meeting_ids
     });
-  });
+  } catch (err) {
+    console.error('Redis error:', err);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 
