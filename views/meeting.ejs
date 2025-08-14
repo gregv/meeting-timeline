@@ -809,7 +809,7 @@
         }
       });
 
-      // Title display with configurable styling
+      // Title display with configurable styling and navigation
       const titleText = new PIXI.Text({
         text: meetingData.title,
         style: {
@@ -822,6 +822,31 @@
       titleText.anchor.set(0.5, 0);
       titleText.x = canvasWidth / 2;
       titleText.y = 15;
+      
+      // Make title clickable for navigation back to meeting home
+      titleText.eventMode = 'static';
+      titleText.cursor = 'pointer';
+      
+      // Add hover effects for better UX
+      titleText.on('pointerover', () => {
+        titleText.alpha = 0.7;
+        titleText.style.fill = 0x0099CC; // Blue on hover to indicate clickability
+      });
+      
+      titleText.on('pointerout', () => {
+        titleText.alpha = 1;
+        titleText.style.fill = 0xFFFFFF; // White normally
+      });
+      
+      // Add click handler to navigate back to meeting home
+      titleText.on('pointerdown', () => {
+        // Track navigation for analytics
+        if (window.analytics) {
+          window.analytics.trackFeatureUsage('title_navigation_home');
+        }
+        window.location.href = '/meeting';
+      });
+      
       app.stage.addChild(titleText);
       
       addDebug(`📝 Title positioned at: (${titleText.x}, ${titleText.y}) with canvas width: ${canvasWidth}`);
