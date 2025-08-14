@@ -3,7 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title || 'Login - AgendaClock' %></title>
+    <title>AgendaClock - Meeting Timeline Creator with Visual Countdown Timers</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Create beautiful meeting agendas with countdown timers for video conferences. Free online tool for productive meetings with visual timeline displays perfect for OBS and screen sharing.">
+    <meta name="keywords" content="meeting agenda, countdown timer, meeting timeline, video conference, OBS, screen sharing, productivity, meeting management, visual agenda">
+    <meta name="author" content="AgendaClock">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://agendaclock.com/">
+    <meta property="og:title" content="AgendaClock - Meeting Timeline Creator with Visual Countdown Timers">
+    <meta property="og:description" content="Create beautiful meeting agendas with countdown timers for video conferences. Free online tool for productive meetings with visual timeline displays perfect for OBS and screen sharing.">
+    <meta property="og:image" content="https://cdn.ohack.dev/agendaclock/5_foxes_in_a_meeting_room_looking.jpeg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://agendaclock.com/">
+    <meta property="twitter:title" content="AgendaClock - Meeting Timeline Creator with Visual Countdown Timers">
+    <meta property="twitter:description" content="Create beautiful meeting agendas with countdown timers for video conferences. Free online tool for productive meetings with visual timeline displays perfect for OBS and screen sharing.">
+    <meta property="twitter:image" content="https://cdn.ohack.dev/agendaclock/5_foxes_in_a_meeting_room_looking.jpeg">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://agendaclock.com/">
     
     <!-- Favicon links -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -11,6 +34,28 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="shortcut icon" href="/favicon-32x32.png">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "AgendaClock",
+        "description": "Create beautiful meeting agendas with countdown timers for video conferences. Free online tool for productive meetings with visual timeline displays perfect for OBS and screen sharing.",
+        "url": "https://agendaclock.com",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "creator": {
+            "@type": "Organization",
+            "name": "AgendaClock"
+        }
+    }
+    </script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -29,7 +74,7 @@
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 400px;
+            max-width: 500px;
             width: 90%;
         }
         
@@ -120,12 +165,162 @@
             color: #4285f4;
             font-weight: bold;
         }
+        
+        .hero-carousel {
+            margin: 20px 0 30px 0;
+            position: relative;
+            height: 200px;            
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carousel-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .carousel-image.active {
+            opacity: 1;
+        }
+        
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ddd;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .carousel-dot.active {
+            background: #4285f4;
+        }
+        
+        .hero-text {
+            margin-bottom: 20px;
+        }
+        
+        .hero-text h1 {
+            font-size: 2.2em;
+            color: #333;
+            margin: 0 0 10px 0;
+            line-height: 1.2;
+        }
+        
+        .hero-text p {
+            font-size: 1.1em;
+            color: #666;
+            margin: 0 0 15px 0;
+            line-height: 1.4;
+        }
+        
+        .value-props {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: left;
+        }
+        
+        .value-props h2 {
+            color: #333;
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+            text-align: center;
+        }
+        
+        .value-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .value-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .value-item .icon {
+            font-size: 1.2em;
+            margin-top: 2px;
+        }
+        
+        .value-item .text {
+            font-size: 0.9em;
+            color: #555;
+            line-height: 1.3;
+        }
+        
+        @media (max-width: 480px) {
+            .hero-carousel {
+                height: 150px;
+            }
+            
+            .hero-text h1 {
+                font-size: 1.8em;
+            }
+            
+            .value-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .login-container {
+                padding: 30px 20px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="logo">📅 AgendaClock</div>
-        <div class="subtitle">Create beautiful meeting agendas with countdown timers</div>
+        <div class="hero-text">
+            <h1>📅 AgendaClock</h1>
+            <p>Create beautiful meeting agendas with visual countdown timers perfect for productive video conferences</p>
+        </div>
+        
+        <div class="hero-carousel">
+            <img src="https://cdn.ohack.dev/agendaclock/5_foxes_in_a_meeting_room_looking.jpeg" 
+                 alt="Professional meeting participants staying focused and on track with AgendaClock timeline" 
+                 class="carousel-image active"
+                 loading="eager">
+            <img src="https://cdn.ohack.dev/agendaclock/6_squares_in_a_zoom_call_where.jpeg" 
+                 alt="Video conference meeting with organized agenda and timing structure" 
+                 class="carousel-image"
+                 loading="lazy">
+            <img src="https://cdn.ohack.dev/agendaclock/a_large_bird_talking_to_other_birds.jpeg" 
+                 alt="Team meeting with clear leadership and structured discussion format" 
+                 class="carousel-image"
+                 loading="lazy">
+        </div>
+        
+        <div class="carousel-dots">
+            <div class="carousel-dot active" data-index="0"></div>
+            <div class="carousel-dot" data-index="1"></div>
+            <div class="carousel-dot" data-index="2"></div>
+        </div>
         
         <% if (error) { %>
             <div class="error">
@@ -164,17 +359,78 @@
             Sign in with Google
         </a>
         
-        <div class="features">
-            <h3>Why use AgendaClock?</h3>
-            <ul>
-                <li>Make sure your meetings stay on track</li>
-                <li>Access your meeting agenda from anywhere</li>
-                <li>Quick and secure authentication</li>
-                <li>Be the hero of your meetings</li>
-                <li>Free to use with no ads</li>
-                <li>Open source and community-driven</li>
-            </ul>
+        <div class="value-props">
+            <h2>Transform Your Meetings</h2>
+            <div class="value-grid">
+                <div class="value-item">
+                    <div class="icon">⏰</div>
+                    <div class="text">Visual countdown timers keep discussions focused and on schedule</div>
+                </div>
+                <div class="value-item">
+                    <div class="icon">🎥</div>
+                    <div class="text">Perfect for video conferences with <a href="https://obsproject.com/" target="_blank">OBS</a> integration support</div>
+                </div>
+                <div class="value-item">
+                    <div class="icon">📊</div>
+                    <div class="text">Beautiful timeline visualizations that engage all participants</div>
+                </div>
+                <div class="value-item">
+                    <div class="icon">🔒</div>
+                    <div class="text">Secure Google authentication with privacy protection</div>
+                </div>
+                <div class="value-item">
+                    <div class="icon">💰</div>
+                    <div class="text">Completely free to use with no ads or hidden costs</div>
+                </div>
+                <div class="value-item">
+                    <div class="icon">🌐</div>
+                    <div class="text">Access your meeting agendas from anywhere, anytime</div>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <script>
+        // Image carousel functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('.carousel-image');
+            const dots = document.querySelectorAll('.carousel-dot');
+            let currentIndex = 0;
+            
+            function showImage(index) {
+                // Hide all images
+                images.forEach(img => img.classList.remove('active'));
+                dots.forEach(dot => dot.classList.remove('active'));
+                
+                // Show selected image and dot
+                images[index].classList.add('active');
+                dots[index].classList.add('active');
+                
+                currentIndex = index;
+            }
+            
+            function nextImage() {
+                const nextIndex = (currentIndex + 1) % images.length;
+                showImage(nextIndex);
+            }
+            
+            // Auto-rotate images every 4 seconds
+            setInterval(nextImage, 4000);
+            
+            // Manual control via dots
+            dots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    showImage(index);
+                });
+            });
+            
+            // Preload images for smooth transitions
+            images.forEach(img => {
+                const preloader = new Image();
+                preloader.src = img.src;
+            });
+        });
+    </script>
 </body>
 </html>
