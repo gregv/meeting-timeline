@@ -27,7 +27,7 @@ router.get('/login', (req, res) => {
       if (meetingId && meetingId.length > 0) {
         returnMessage = `After login, you'll be redirected to meeting ${meetingId}`;
       } else {
-        returnMessage = "After login, you'll be redirected to your meetings";
+        returnMessage = "After login, you'll be redirected to the meeting dashboard";
       }
     } else {
       returnMessage = `After login, you'll be redirected to ${returnTo}`;

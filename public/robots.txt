@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /effective-meetings
+Allow: /managing-talkative-participants
+Allow: /productive-meeting-tips
+Allow: /auth/login
+
+# Disallow authenticated user areas
+Disallow: /meeting/
+Disallow: /auth/google
+Disallow: /auth/google/callback
+Disallow: /auth/logout
+
+# Sitemap location
+Sitemap: https://agendaclock.com/sitemap.xml
