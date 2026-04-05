@@ -5,6 +5,7 @@ Allow: /managing-talkative-participants
 Allow: /productive-meeting-tips
 Allow: /meeting-agenda-timer
 Allow: /meeting-length-effectiveness
+Allow: /ai-changing-meetings
 
 # Disallow authenticated user areas
 Disallow: /meeting/

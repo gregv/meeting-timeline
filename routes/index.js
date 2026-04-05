@@ -32,6 +32,10 @@ router.get('/meeting-length-effectiveness', (req, res) => {
     res.render('meeting-length-effectiveness');
 });
 
+router.get('/ai-changing-meetings', (req, res) => {
+    res.render('ai-changing-meetings');
+});
+
 // SEO Files
 router.get('/sitemap.xml', (req, res) => {
     res.type('application/xml');

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How AI Is Changing Meetings: What Still Needs a Room Full of Humans - AgendaClock</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="AI is automating status updates, meeting notes, and action items. So what are meetings actually for now? A practical guide to running meetings in the age of AI — fewer, shorter, and focused on the conversations only humans can have.">
+    <meta name="keywords" content="AI changing meetings, AI replacing meetings, future of meetings AI, AI meeting assistant, AI status updates, do we still need meetings, fewer meetings with AI, AI meeting productivity, async meetings AI">
+    <meta name="author" content="AgendaClock">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://agendaclock.com/ai-changing-meetings">
+    <meta property="og:title" content="How AI Is Changing Meetings: What Still Needs a Room Full of Humans">
+    <meta property="og:description" content="AI is automating status updates, meeting notes, and action items. So what are meetings actually for now? A practical guide to running meetings in the age of AI.">
+    <meta property="og:image" content="https://cdn.ohack.dev/agendaclock/6_squares_in_a_zoom_call_where.jpeg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://agendaclock.com/ai-changing-meetings">
+    <meta property="twitter:title" content="How AI Is Changing Meetings: What Still Needs a Room Full of Humans">
+    <meta property="twitter:description" content="AI is automating status updates, meeting notes, and action items. So what are meetings actually for now? A practical guide to running meetings in the age of AI.">
+    <meta property="twitter:image" content="https://cdn.ohack.dev/agendaclock/6_squares_in_a_zoom_call_where.jpeg">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://agendaclock.com/ai-changing-meetings">
+
+    <!-- Favicon links -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="shortcut icon" href="/favicon-32x32.png">
+
+    <% include partials/analytics %>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    [
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "How AI Is Changing Meetings: What Still Needs a Room Full of Humans",
+        "description": "AI is automating status updates, meeting notes, and action items. A practical guide to running meetings in the age of AI — fewer, shorter, and focused on the conversations only humans can have.",
+        "datePublished": "2026-04-05",
+        "dateModified": "2026-04-05",
+        "author": {
+            "@type": "Organization",
+            "name": "AgendaClock"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "AgendaClock",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://cdn.ohack.dev/agendaclock/agendaclock_logo.jpeg"
+            }
+        },
+        "mainEntityOfPage": "https://agendaclock.com/ai-changing-meetings",
+        "image": "https://cdn.ohack.dev/agendaclock/6_squares_in_a_zoom_call_where.jpeg"
+    },
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "Will AI replace meetings?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "AI won't replace meetings — it will replace the bad parts of meetings. Status updates, note-taking, action item tracking, and follow-up summaries are all being automated. What remains are the things AI can't do: reading the room, building trust, making judgment calls with incomplete information, and having the kind of high-bandwidth conversation where tone and body language matter as much as words."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What types of meetings can AI eliminate?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Status meetings are the first to go. AI can pull updates from project tools, Slack, git commits, and task boards to generate async status reports that are more accurate than what people say in a standup anyway. Informational meetings where one person presents to many are also replaceable — record it, let AI summarize it, let people watch on their own time. Recurring check-ins with no agenda should be async by default."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "How should meeting agendas change with AI tools?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Strip out everything AI handles better: status updates, information sharing, note-taking, and follow-up tracking. What's left on the agenda should be decisions that need debate, problems that need multiple perspectives, relationship-building, and creative sessions where ideas bounce off each other in real time. Every agenda item should pass the test: does this require synchronous human interaction?"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What is the best way to use AI meeting assistants?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Use AI for the work around the meeting, not as a replacement for the meeting itself. Before: AI generates pre-reads, pulls relevant data, drafts the agenda from action items. During: AI transcribes, captures action items, flags when topics run over time. After: AI distributes notes, tracks action item completion, and flags items for the next meeting. The humans focus on the conversation."
+                }
+            }
+        ]
+    }
+    ]
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a855f7 100%);
+            margin: 0;
+            padding: 20px 0;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .hero {
+            background: linear-gradient(rgba(108, 92, 231, 0.9), rgba(168, 85, 247, 0.9)),
+                        url('https://cdn.ohack.dev/agendaclock/6_squares_in_a_zoom_call_where.jpeg');
+            background-size: cover;
+            background-position: center;
+            padding: 60px 40px;
+            color: white;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.8em;
+            margin: 0 0 20px 0;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.3em;
+            margin: 0 0 30px 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .hero-cta {
+            background: #fff;
+            color: #6c5ce7;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+
+        .hero-cta:hover {
+            background: #f0f0f0;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .article-content h2 {
+            color: #6c5ce7;
+            font-size: 2em;
+            margin: 40px 0 20px 0;
+            border-bottom: 3px solid #a855f7;
+            padding-bottom: 10px;
+        }
+
+        .article-content h3 {
+            color: #333;
+            font-size: 1.4em;
+            margin: 30px 0 15px 0;
+        }
+
+        .article-content p {
+            color: #555;
+            margin: 15px 0;
+            font-size: 1.1em;
+        }
+
+        .quote-block {
+            background: #f5f0ff;
+            border-left: 4px solid #6c5ce7;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #333;
+        }
+
+        .quote-block cite {
+            display: block;
+            margin-top: 10px;
+            font-style: normal;
+            font-weight: 600;
+            color: #6c5ce7;
+        }
+
+        .stats-section {
+            background: linear-gradient(135deg, #6c5ce7 0%, #a855f7 100%);
+            color: white;
+            padding: 40px;
+            margin: 40px 0;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stats-section h2 {
+            color: white;
+            border: none;
+            margin: 0 0 25px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat-item h3 {
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            color: #fff;
+        }
+
+        .stat-item p {
+            margin: 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .meeting-type-card {
+            background: #f8f9fa;
+            margin: 20px 0;
+            border-radius: 12px;
+            border-left: 5px solid #6c5ce7;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .meeting-type-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .meeting-type-header {
+            background: #6c5ce7;
+            color: white;
+            padding: 15px 25px;
+            font-size: 1.3em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .meeting-type-verdict {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+
+        .meeting-type-body {
+            padding: 25px;
+        }
+
+        .meeting-type-body p {
+            margin: 0 0 10px 0;
+            color: #666;
+        }
+
+        .ai-does {
+            background: #f0e6ff;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 3px solid #a855f7;
+            color: #4a1d96;
+        }
+
+        .ai-does::before {
+            content: "AI handles: ";
+            font-weight: bold;
+        }
+
+        .humans-do {
+            background: #e8f5e8;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 3px solid #27ae60;
+            color: #2d5016;
+        }
+
+        .humans-do::before {
+            content: "Humans still need to: ";
+            font-weight: bold;
+        }
+
+        .key-insight {
+            background: #f0f4ff;
+            border-left: 4px solid #1a73e8;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .key-insight h3 {
+            color: #1a73e8;
+            margin-top: 0;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .comparison-card {
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        .comparison-card.before {
+            background: #fff5f5;
+            border-top: 4px solid #e74c3c;
+        }
+
+        .comparison-card.after {
+            background: #f0fff0;
+            border-top: 4px solid #27ae60;
+        }
+
+        .comparison-card h3 {
+            margin-top: 0;
+        }
+
+        .comparison-card.before h3 {
+            color: #e74c3c;
+        }
+
+        .comparison-card.after h3 {
+            color: #27ae60;
+        }
+
+        .comparison-card ul {
+            padding-left: 20px;
+            color: #555;
+        }
+
+        .comparison-card li {
+            margin: 8px 0;
+        }
+
+        .faq-section {
+            margin: 40px 0;
+        }
+
+        .faq-item {
+            background: #f8f9fa;
+            margin: 15px 0;
+            border-radius: 8px;
+            padding: 25px;
+            border-left: 4px solid #6c5ce7;
+        }
+
+        .faq-item h3 {
+            color: #6c5ce7;
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+
+        .faq-item p {
+            color: #555;
+            margin: 0;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            padding: 40px;
+            margin: 40px 0;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            color: white;
+            border: none;
+            margin: 0 0 20px 0;
+            font-size: 2.2em;
+        }
+
+        .cta-section p {
+            color: white;
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+
+        .cta-button {
+            background: white;
+            color: #4285f4;
+            padding: 15px 35px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .cta-button:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .footer-nav {
+            background: #f8f9fa;
+            padding: 30px 40px;
+            border-top: 1px solid #eee;
+        }
+
+        .footer-nav h3 {
+            color: #333;
+            margin: 0 0 15px 0;
+        }
+
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .nav-links a {
+            color: #4285f4;
+            text-decoration: none;
+            padding: 8px 0;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .nav-links a:hover {
+            border-bottom-color: #4285f4;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 40px 20px;
+            }
+
+            .hero h1 {
+                font-size: 2.2em;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .footer-nav {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .meeting-type-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>How AI Is Changing Meetings</h1>
+            <p>AI automates the busywork. What's left is the part that actually matters.</p>
+            <a href="/auth/google" class="hero-cta">Build Focused Meeting Agendas</a>
+        </div>
+
+        <div class="content">
+            <div class="article-content">
+                <div class="quote-block">
+                    "Do not continue to have unproductive meetings. Do not have status meetings. Ensure that every <em>single</em> person in a meeting should either be receiving value or providing value."
+                    <cite>- This was good advice before AI. Now it's non-negotiable.</cite>
+                </div>
+
+                <h2>The Status Meeting Is Dead</h2>
+                <p>Let's start with the obvious. If your Monday morning standup consists of people reading off what they did last week, AI already does that better than you. It pulls from your git commits, your Jira tickets, your Slack messages, your pull requests. It doesn't forget things. It doesn't embellish. And it doesn't need 8 people in a room to deliver the information.</p>
+                <p>Status meetings existed because there was no other way to get a synchronized view of what everyone was doing. That constraint is gone. AI tools like <a href="https://otter.ai/" target="_blank" style="color: #6c5ce7;">Otter.ai</a>, <a href="https://fireflies.ai/" target="_blank" style="color: #6c5ce7;">Fireflies</a>, and <a href="https://fellow.app/" target="_blank" style="color: #6c5ce7;">Fellow</a> can generate status summaries from your team's actual work output — not from what people <em>remember</em> they did.</p>
+                <p>If you're still running status meetings in 2026, you're burning collective hours on a problem that has been solved.</p>
+
+                <div class="stats-section">
+                    <h2>The Shift</h2>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <h3>42%</h3>
+                            <p>of companies rolling out AI meeting assistants this year</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>14.8hrs</h3>
+                            <p>average weekly meeting time (down from 21.5 in 2021)</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>37%</h3>
+                            <p>of remaining meeting time is <em>still</em> wasted</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>What AI Actually Automates</h2>
+                <p>AI doesn't replace meetings. It replaces the <em>bad parts</em> of meetings. Here's the split:</p>
+
+                <div class="comparison-grid">
+                    <div class="comparison-card before">
+                        <h3>AI Does This Now</h3>
+                        <ul>
+                            <li>Taking notes and transcribing</li>
+                            <li>Generating status updates from tools</li>
+                            <li>Tracking and following up on action items</li>
+                            <li>Summarizing long discussions</li>
+                            <li>Distributing meeting recaps</li>
+                            <li>Scheduling and prep reminders</li>
+                            <li>Flagging when topics run over time</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-card after">
+                        <h3>Humans Still Own This</h3>
+                        <ul>
+                            <li>Reading the room</li>
+                            <li>Building trust and rapport</li>
+                            <li>Making judgment calls with incomplete data</li>
+                            <li>Navigating conflict and disagreement</li>
+                            <li>Creative brainstorming with real-time riffing</li>
+                            <li>High-bandwidth emotional conversations</li>
+                            <li>Deciding when to change direction</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <p>The pattern is clear: AI handles the <em>information logistics</em> of meetings. Humans handle the <em>judgment, creativity, and relationships</em>. If your meeting is mostly information logistics, it should probably be async.</p>
+
+                <h2>Which Meetings Survive AI?</h2>
+                <p>Run every recurring meeting through this filter: <strong>does this require synchronous human interaction?</strong> If the answer is "we've always done it this way" — that's not an answer.</p>
+
+                <div class="meeting-type-card">
+                    <div class="meeting-type-header">
+                        <span>Status / Standup Meetings</span>
+                        <span class="meeting-type-verdict">Kill it. Go async.</span>
+                    </div>
+                    <div class="meeting-type-body">
+                        <p>The entire purpose of a standup is information synchronization. AI does this better, faster, and without pulling 8 people out of flow state at 9am. Let AI aggregate updates from your tools and generate a daily digest.</p>
+                        <div class="ai-does">Pull updates from Jira, GitHub, Slack. Generate daily/weekly summaries. Flag blockers automatically.</div>
+                        <div class="humans-do">Review the AI summary async. Escalate blockers in a 10-minute sync <em>only when needed</em>.</div>
+                    </div>
+                </div>
+
+                <div class="meeting-type-card">
+                    <div class="meeting-type-header">
+                        <span>Decision Meetings</span>
+                        <span class="meeting-type-verdict">Keep it. Make it shorter.</span>
+                    </div>
+                    <div class="meeting-type-body">
+                        <p>Decisions with real trade-offs need debate. But AI changes the prep. Instead of spending the first 20 minutes presenting context, let AI generate a decision brief ahead of time — options, trade-offs, data. Show up ready to argue, not ready to learn.</p>
+                        <div class="ai-does">Generate decision briefs from existing docs. Summarize prior discussions on the topic. Draft pros/cons analysis.</div>
+                        <div class="humans-do">Debate trade-offs. Weigh risks that require judgment. Commit to a direction. Own the decision.</div>
+                    </div>
+                </div>
+
+                <div class="meeting-type-card">
+                    <div class="meeting-type-header">
+                        <span>1:1 Check-ins</span>
+                        <span class="meeting-type-verdict">Keep it. It's about trust.</span>
+                    </div>
+                    <div class="meeting-type-body">
+                        <p>1:1s are relationship infrastructure. AI can surface talking points from recent activity, but the conversation itself — coaching, feedback, career growth, the stuff people don't say in a group — that's irreplaceably human. Don't let AI touch the conversation. Let it handle the logistics around it.</p>
+                        <div class="ai-does">Suggest talking points from recent work. Track action items from previous 1:1s. Remind both parties to prep.</div>
+                        <div class="humans-do">Have the actual conversation. Listen. Coach. Build the relationship that makes someone want to stay on your team.</div>
+                    </div>
+                </div>
+
+                <div class="meeting-type-card">
+                    <div class="meeting-type-header">
+                        <span>Brainstorms / Creative Sessions</span>
+                        <span class="meeting-type-verdict">Keep it. Make it rare and focused.</span>
+                    </div>
+                    <div class="meeting-type-body">
+                        <p>Creative work benefits from real-time human interaction — the "yes, and" energy that comes from bouncing ideas off people who have different backgrounds and viewpoints. But free brainstorming without focus creates breadth without depth. Seed the brainstorm with specific problem statements. Don't ask for a blanket of "innovative ideas."</p>
+                        <div class="ai-does">Research the problem space beforehand. Summarize prior art and related solutions. Capture and organize ideas during the session.</div>
+                        <div class="humans-do">Generate novel ideas. Challenge assumptions. Build on each other's thinking in ways that require reading tone and energy.</div>
+                    </div>
+                </div>
+
+                <div class="meeting-type-card">
+                    <div class="meeting-type-header">
+                        <span>All-Hands / Town Halls</span>
+                        <span class="meeting-type-verdict">Rethink it. Split it.</span>
+                    </div>
+                    <div class="meeting-type-body">
+                        <p>The presentation part? Record it. Let people watch at 1.5x on their own time. Let AI generate a summary with key takeaways. The Q&A part? That's worth keeping live — it's the one time leadership has to answer unscripted questions. Time-box the presentation, maximize the Q&A.</p>
+                        <div class="ai-does">Transcribe the presentation. Generate summaries. Collect questions async before the live Q&A.</div>
+                        <div class="humans-do">Answer the hard questions live. Show up as real people, not slide-readers. Create the sense of shared direction that only synchronous presence provides.</div>
+                    </div>
+                </div>
+
+                <div class="key-insight">
+                    <h3>The New Meeting Test</h3>
+                    <p>Before scheduling any meeting, ask three questions:</p>
+                    <ol style="color: #555;">
+                        <li><strong>Can AI generate this information async?</strong> If yes, don't meet.</li>
+                        <li><strong>Does this require real-time human judgment?</strong> If yes, meet — but only with the people whose judgment is needed.</li>
+                        <li><strong>Is there emotional or relational content?</strong> If yes, meet — tone and body language matter and AI can't read a room.</li>
+                    </ol>
+                    <p>If a meeting passes this filter, it deserves a tight agenda with time-boxed topics and a visible countdown. The meetings that survive AI should be run <em>better</em> than ever — because they're the ones that actually matter.</p>
+                </div>
+
+                <h2>The AI Meeting Stack</h2>
+                <p>Here's what the workflow looks like when you use AI properly around meetings:</p>
+
+                <h3>Before the Meeting</h3>
+                <ul>
+                    <li><strong>AI generates the pre-read</strong> from existing docs, prior meeting notes, and relevant data</li>
+                    <li><strong>AI drafts the agenda</strong> from open action items and submitted topics</li>
+                    <li><strong>AI sends prep reminders</strong> with context so people show up ready to contribute, not ready to learn</li>
+                </ul>
+
+                <h3>During the Meeting</h3>
+                <ul>
+                    <li><strong>AI transcribes and captures action items</strong> in real time — nobody needs to be the designated note-taker</li>
+                    <li><strong>Visual timers keep topics on track</strong> — the structure enforces focus so you don't need a human timekeeper</li>
+                    <li><strong>Humans focus entirely on the conversation</strong> — the high-bandwidth, nuanced, judgment-heavy parts that justify getting everyone in the same room</li>
+                </ul>
+
+                <h3>After the Meeting</h3>
+                <ul>
+                    <li><strong>AI distributes the summary</strong> within minutes, not 24 hours</li>
+                    <li><strong>AI tracks action item completion</strong> and flags overdue items automatically</li>
+                    <li><strong>AI feeds unresolved items into the next meeting's agenda</strong> — nothing falls through the cracks</li>
+                </ul>
+
+                <h2>What This Means for Meeting Agendas</h2>
+                <p>When AI handles the information logistics, your agenda should look radically different. Strip out everything AI does better:</p>
+                <ul>
+                    <li><strong>Remove status updates</strong> — AI generates these from your tools</li>
+                    <li><strong>Remove "FYI" items</strong> — send these async with an AI-generated summary</li>
+                    <li><strong>Remove note-taking overhead</strong> — AI captures everything</li>
+                </ul>
+                <p>What's left?</p>
+                <ul>
+                    <li><strong>Decisions that need debate</strong> — with pre-reads already distributed</li>
+                    <li><strong>Problems that need multiple perspectives</strong> — where the discussion itself generates insight</li>
+                    <li><strong>Relationship moments</strong> — team-building, conflict resolution, career conversations</li>
+                    <li><strong>Creative sessions</strong> — seeded with specific problems, not open-ended</li>
+                </ul>
+                <p>This is how you end up with 25-minute meetings that accomplish more than old 60-minute meetings ever did. Every minute has a purpose. Every person in the room is there because a human is needed, not because a calendar invite was forwarded.</p>
+
+                <div class="faq-section">
+                    <h2>Frequently Asked Questions</h2>
+
+                    <div class="faq-item">
+                        <h3>Will AI replace meetings entirely?</h3>
+                        <p>No. AI replaces the bad parts — status updates, note-taking, action item tracking, follow-up summaries. What remains are the things AI can't do: reading the room, building trust, making judgment calls with incomplete information, and high-bandwidth conversations where tone and body language matter as much as words.</p>
+                    </div>
+
+                    <div class="faq-item">
+                        <h3>What types of meetings can AI eliminate?</h3>
+                        <p>Status meetings are first. AI pulls updates from project tools, Slack, git commits, and task boards to generate async reports that are more accurate than what people say in a standup. Informational meetings where one person presents to many are also replaceable — record it, let AI summarize it, let people watch on their own time.</p>
+                    </div>
+
+                    <div class="faq-item">
+                        <h3>How should meeting agendas change with AI?</h3>
+                        <p>Strip out everything AI handles better: status updates, information sharing, note-taking, and follow-up tracking. What's left should be decisions that need debate, problems that need multiple perspectives, and creative sessions where ideas bounce off each other in real time. Every item should pass the test: does this require synchronous human interaction?</p>
+                    </div>
+
+                    <div class="faq-item">
+                        <h3>What is the best way to use AI meeting assistants?</h3>
+                        <p>Use AI for the work <em>around</em> the meeting. Before: AI generates pre-reads, pulls data, drafts the agenda. During: AI transcribes and captures action items. After: AI distributes notes and tracks follow-through. The humans focus on the conversation — the part that actually requires being human.</p>
+                    </div>
+                </div>
+
+                <div class="cta-section">
+                    <h2>Run the Meetings That Matter</h2>
+                    <p>AI handles the busywork. AgendaClock handles the structure. Build focused agendas with visual timers for the meetings that still need humans in the room.</p>
+                    <a href="/auth/google" class="cta-button">Build Your Meeting Agenda</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <h3>More Meeting Resources</h3>
+            <div class="nav-links">
+                <a href="/effective-meetings">How to Have More Effective Meetings</a>
+                <a href="/managing-talkative-participants">Managing Talkative Participants</a>
+                <a href="/productive-meeting-tips">15 Productive Meeting Tips</a>
+                <a href="/meeting-agenda-timer">Meeting Agenda Timer</a>
+                <a href="/meeting-length-effectiveness">Meeting Length vs. Effectiveness</a>
+                <a href="/">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
