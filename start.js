@@ -3,7 +3,7 @@ const express = require('express');
 const helmet = require("helmet");
 app.use(helmet());
 app.set('view engine', 'ejs');
-app.use( express.static( "public" ) );
+app.use( express.static( "public", { maxAge: '7d' } ) );
 
 
 const server = app.listen(3000, () => {

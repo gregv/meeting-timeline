@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 const bodyParser = require('body-parser');
+const compression = require('compression');
 const express = require('express');
 const session = require('express-session');
 const route_index = require('./routes/index');
@@ -10,6 +11,9 @@ const route_auth = require('./routes/auth');
 const { passport } = require('./config/auth');
 
 const app = express();
+
+// Compression middleware
+app.use(compression());
 
 // Session configuration
 app.use(session({

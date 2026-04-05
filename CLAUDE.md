@@ -47,7 +47,7 @@ This is a Node.js/Express meeting timeline application that creates visual meeti
 - **Entry point**: `start.js` - Sets up Express server with security headers and static file serving
 - **App configuration**: `app.js` - Configures Express routes and middleware
 - **Routes**:
-  - `routes/index.js` - Redirects root to `/meeting/` (with auth check)
+  - `routes/index.js` - Serves homepage for unauthenticated users, redirects authenticated to `/meeting/`, and serves SEO landing pages
   - `routes/meeting.js` - Main meeting CRUD operations and timeline rendering (protected)
   - `routes/auth.js` - Google OAuth authentication routes (/auth/login, /auth/logout, /auth/google/*)
 - **Frontend**: Uses PixiJS for timeline visualization with blue chroma key background for OBS integration
@@ -90,7 +90,10 @@ This is a Node.js/Express meeting timeline application that creates visual meeti
 
 - **EJS templates** in `views/` directory
 - **Modular structure**: `meeting_header.ejs` and `meeting_footer.ejs` for reusable components
-- **Main templates**: `create_meeting.ejs`, `edit_meeting.ejs`, `meeting.ejs`, `index.ejs`
+- **Shared partials**: `views/partials/analytics.ejs` - Google Analytics snippet included in all public pages
+- **SEO landing pages**: `login.ejs`, `effective-meetings.ejs`, `managing-talkative-participants.ejs`, `productive-meeting-tips.ejs`, `meeting-agenda-timer.ejs`, `meeting-length-effectiveness.ejs`
+- **App templates**: `create_meeting.ejs`, `edit_meeting.ejs`, `meeting.ejs`, `index.ejs`
+- **EJS version**: 1.0.0 (uses `<% include path %>` syntax, NOT `<%- include('path') %>`)
 
 ### Meeting Data Flow
 
@@ -101,6 +104,6 @@ This is a Node.js/Express meeting timeline application that creates visual meeti
 
 ### Dependencies
 
-- **Backend**: Express, EJS, Redis clients (redis + ioredis), moment-timezone, crypto-js, helmet
+- **Backend**: Express, EJS, Redis clients (redis + ioredis), moment-timezone, crypto-js, helmet, compression
 - **Frontend**: PixiJS (bundled as pixi.min.js), moment.js for time handling
 - **Development**: nodemon for auto-reload during development

@@ -7,7 +7,7 @@ router.get('/', (req, res) => {
     if (req.isAuthenticated()) {
         res.redirect("/meeting/");
     } else {
-        res.redirect("/auth/login");
+        res.render('login', { error: null });
     }
 });
 
@@ -22,6 +22,14 @@ router.get('/managing-talkative-participants', (req, res) => {
 
 router.get('/productive-meeting-tips', (req, res) => {
     res.render('productive-meeting-tips');
+});
+
+router.get('/meeting-agenda-timer', (req, res) => {
+    res.render('meeting-agenda-timer');
+});
+
+router.get('/meeting-length-effectiveness', (req, res) => {
+    res.render('meeting-length-effectiveness');
 });
 
 // SEO Files

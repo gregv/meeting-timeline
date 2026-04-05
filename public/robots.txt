@@ -3,13 +3,12 @@ Allow: /
 Allow: /effective-meetings
 Allow: /managing-talkative-participants
 Allow: /productive-meeting-tips
-Allow: /auth/login
+Allow: /meeting-agenda-timer
+Allow: /meeting-length-effectiveness
 
 # Disallow authenticated user areas
 Disallow: /meeting/
-Disallow: /auth/google
-Disallow: /auth/google/callback
-Disallow: /auth/logout
+Disallow: /auth/
 
 # Sitemap location
 Sitemap: https://agendaclock.com/sitemap.xml

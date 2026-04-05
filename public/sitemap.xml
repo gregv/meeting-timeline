@@ -4,10 +4,10 @@
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-    <!-- Homepage / Login -->
+    <!-- Homepage -->
     <url>
         <loc>https://agendaclock.com/</loc>
-        <lastmod>2025-01-15</lastmod>
+        <lastmod>2026-04-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>1.0</priority>
     </url>
@@ -15,39 +15,37 @@
     <!-- SEO Landing Pages -->
     <url>
         <loc>https://agendaclock.com/effective-meetings</loc>
-        <lastmod>2025-01-15</lastmod>
+        <lastmod>2026-04-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
     </url>
 
     <url>
         <loc>https://agendaclock.com/managing-talkative-participants</loc>
-        <lastmod>2025-01-15</lastmod>
+        <lastmod>2026-04-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
     </url>
 
     <url>
         <loc>https://agendaclock.com/productive-meeting-tips</loc>
-        <lastmod>2025-01-15</lastmod>
+        <lastmod>2026-04-05</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
     </url>
 
-    <!-- Authentication Pages -->
     <url>
-        <loc>https://agendaclock.com/auth/login</loc>
-        <lastmod>2025-01-15</lastmod>
-        <changefreq>yearly</changefreq>
-        <priority>0.7</priority>
+        <loc>https://agendaclock.com/meeting-agenda-timer</loc>
+        <lastmod>2026-04-05</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
     </url>
 
-    <!-- Application Pages (for authenticated users) -->
     <url>
-        <loc>https://agendaclock.com/meeting/</loc>
-        <lastmod>2025-01-15</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>   
+        <loc>https://agendaclock.com/meeting-length-effectiveness</loc>
+        <lastmod>2026-04-05</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
 
 </urlset>

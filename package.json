@@ -8,6 +8,7 @@
     "dependencies": {
         "after-load": "^1.0.4",
         "body-parser": "^1.19.0",
+        "compression": "^1.8.1",
         "crypto-js": "^4.0.0",
         "date-and-time": "*",
         "dotenv": "^17.2.1",
