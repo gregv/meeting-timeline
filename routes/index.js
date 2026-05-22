@@ -36,6 +36,10 @@ router.get('/ai-changing-meetings', (req, res) => {
     res.render('ai-changing-meetings');
 });
 
+router.get('/meeting-introductions-antipattern', (req, res) => {
+    res.render('meeting-introductions-antipattern');
+});
+
 // SEO Files
 router.get('/sitemap.xml', (req, res) => {
     res.type('application/xml');
