@@ -7,7 +7,24 @@ const date = require('date-and-time');
 const redis = require("redis");
 const momentTZ = require('moment-timezone');
 const sha3 = require("crypto-js/sha3");
-const { requireAuth, getUserEmail, getUserMeetingKey, getPublicMeetingKey, isUserMeetingOwner } = require('../config/auth');
+const { requireAuth, optionalAuth, getUserEmail, getUserMeetingKey, getPublicMeetingKey, isUserMeetingOwner } = require('../config/auth');
+
+// Available visualization modes for /meeting/:id?view=...
+// Each maps to a template in views/meeting_views/ and a renderer in public/js/views/
+const VIEW_MODES = ['overlay', 'liftoff', 'rail', 'table', 'focus', 'ring'];
+
+function normalizeView(v) {
+  const view = String(v || '').toLowerCase();
+  return VIEW_MODES.includes(view) ? view : null;
+}
+
+// Checkbox fields arrive as 'on' (checked) or are absent (unchecked). The new
+// editor posts an explicit 'off' for unchecked toggles so defaults can be overridden.
+function boolFlag(value, defaultValue) {
+  if (value === 'on' || value === true) return true;
+  if (value === 'off' || value === false) return false;
+  return defaultValue;
+}
 
 
 // --- Redis connection setup with reconnection logic ---
@@ -169,10 +186,10 @@ function getDataFromRedis(redis_meeting)
     titleFontSize: parseInt(redis_meeting.titleFontSize) || 24,
     blockFontSize: parseInt(redis_meeting.blockFontSize) || 11,
     timeLabelFontSize: parseInt(redis_meeting.timeLabelFontSize) || 10,
-    showDebug: redis_meeting.showDebug === 'on' || redis_meeting.showDebug === true,
-    showProgressBars: redis_meeting.showProgressBars === 'on' || redis_meeting.showProgressBars === true || redis_meeting.showProgressBars === undefined,
-    showStatusIcons: redis_meeting.showStatusIcons === 'on' || redis_meeting.showStatusIcons === true || redis_meeting.showStatusIcons === undefined,
-    showTimeLabels: redis_meeting.showTimeLabels === 'on' || redis_meeting.showTimeLabels === true || redis_meeting.showTimeLabels === undefined,
+    showDebug: boolFlag(redis_meeting.showDebug, false),
+    showProgressBars: boolFlag(redis_meeting.showProgressBars, true),
+    showStatusIcons: boolFlag(redis_meeting.showStatusIcons, true),
+    showTimeLabels: boolFlag(redis_meeting.showTimeLabels, true),
     animationSpeed: parseFloat(redis_meeting.animationSpeed) || 1.0,
     segmentHeight: parseInt(redis_meeting.segmentHeight) || 50,
     colors: {
@@ -183,7 +200,7 @@ function getDataFromRedis(redis_meeting)
       currentAlpha: parseFloat(redis_meeting.currentAlpha) || 0.9,
       upcomingAlpha: parseFloat(redis_meeting.upcomingAlpha) || 0.4
     },
-    missionControlTheme: redis_meeting.missionControlTheme === 'on' || redis_meeting.missionControlTheme === true || redis_meeting.missionControlTheme === undefined,
+    missionControlTheme: boolFlag(redis_meeting.missionControlTheme, true),
     timeMarker: {
       primaryColor: redis_meeting.markerPrimaryColor || "FF0000",
       secondaryColor: redis_meeting.markerSecondaryColor || "FFAA00",
@@ -193,15 +210,15 @@ function getDataFromRedis(redis_meeting)
       glowIntensity: parseFloat(redis_meeting.markerGlowIntensity) || 0.3,
       pulseSpeed: parseInt(redis_meeting.markerPulseSpeed) || 200,
       style: redis_meeting.markerStyle || "modern", // modern, classic, minimal, arrow
-      showGlow: redis_meeting.markerShowGlow === 'on' || redis_meeting.markerShowGlow === true,
-      showCircle: redis_meeting.markerShowCircle === 'on' || redis_meeting.markerShowCircle === true,
-      showLine: redis_meeting.markerShowLine === 'on' || redis_meeting.markerShowLine === true,
+      showGlow: boolFlag(redis_meeting.markerShowGlow, false),
+      showCircle: boolFlag(redis_meeting.markerShowCircle, false),
+      showLine: boolFlag(redis_meeting.markerShowLine, false),
       textStyle: {
         fontSize: parseInt(redis_meeting.markerTextSize) || 14,
         color: redis_meeting.markerTextColor || "FFFFFF",
         backgroundColor: redis_meeting.markerTextBg || "000000",
         backgroundAlpha: parseFloat(redis_meeting.markerTextBgAlpha) || 0.7,
-        showBackground: redis_meeting.markerTextShowBg === 'on' || redis_meeting.markerTextShowBg === true,
+        showBackground: boolFlag(redis_meeting.markerTextShowBg, false),
         fontFamily: redis_meeting.markerTextFont || "monospace"
       }
     }
@@ -214,7 +231,9 @@ function getDataFromRedis(redis_meeting)
 
 
   // If we get 1:00PM, pad with a zero to 01:00PM
-  let start_time = redis_meeting.start_time;
+  // Guard against legacy/malformed records with no start_time so one bad
+  // meeting can't crash list rendering
+  let start_time = redis_meeting.start_time || "09:00 AM";
   let timezone = redis_meeting.timezone;
 
   if( start_time.split(":")[0].length == 1 )
@@ -277,7 +296,9 @@ function getDataFromRedis(redis_meeting)
     "icon": icon,
     "config": config,
     "is_public": redis_meeting.is_public || false,
-    "owner_email": redis_meeting.owner_email || null
+    "owner_email": redis_meeting.owner_email || null,
+    "default_view": normalizeView(redis_meeting.default_view),
+    "preset": redis_meeting.preset || null
   }
 
   console.log("=== Normalized Data to Pass to General Parser ===");
@@ -328,12 +349,20 @@ function getData(meeting){
 
    element.width = percent_of_total_width;
    element.location = location;
+   element.endTime = date.addMinutes(startDate, prev_time + element.time);
+   element.startTimeISO = element.startTime.toISOString();
+   element.endTimeISO = element.endTime.toISOString();
 
    prev_width = percent_of_total_width;
    prev_time += element.time;
 
    counter++;
   });
+
+  // ISO timestamps for the client-side time engine. contentEnd is the end of
+  // the last topic, WITHOUT the +2 minute display padding baked into meeting.end.
+  meeting.startISO = startDate.toISOString();
+  meeting.contentEndISO = date.addMinutes(startDate, prev_time).toISOString();
 
   // Ensure config object exists with defaults
   if (!meeting.config) {
@@ -384,6 +413,48 @@ function getData(meeting){
 }
 
 
+// Build the normalized JSON payload consumed by the client-side time engine
+// and view renderers (window.MEETING). All times are ISO 8601 strings so the
+// client needs no timezone math beyond native Date parsing.
+function buildClientPayload(data, opts)
+{
+  return {
+    id: opts.id,
+    view: opts.view,
+    chrome: opts.chrome,
+    preview: !!opts.preview,
+    transparent: !!opts.transparent,
+    is_owner: !!opts.is_owner,
+    title: data.title,
+    icon: data.icon,
+    background: data.background,
+    config: data.config,
+    time: {
+      startISO: data.startISO,
+      endISO: data.contentEndISO,
+      timezone: data.timezone,
+      totalMinutes: data.duration
+    },
+    topics: data.topics
+      .filter(t => t.topic)
+      .map(t => ({
+        id: t.id,
+        person: t.person || '',
+        topic: t.topic,
+        minutes: t.time,
+        startISO: t.startTimeISO,
+        endISO: t.endTimeISO
+      }))
+  };
+}
+
+// Serialize the payload for embedding inside a <script> tag. Escaping '<'
+// prevents topic text like "</script><script>..." from breaking out of the tag.
+function serializePayload(payload)
+{
+  return JSON.stringify(payload).replace(/</g, '\\u003c');
+}
+
 function get_short_hash()
 {
   var hrTime = process.hrtime();
@@ -415,9 +486,14 @@ router.get('/list', requireAuth, async (req, res) => {
 
     meeting_infos.forEach((item, i) => {
       if (item) {
-        const meeting_details = JSON.parse(item);
-        const pretty_meeting_details = getDataFromRedis(meeting_details);
-        recent_meeting_ids.push(pretty_meeting_details);
+        // One malformed record must not break the whole list
+        try {
+          const meeting_details = JSON.parse(item);
+          const pretty_meeting_details = getDataFromRedis(meeting_details);
+          recent_meeting_ids.push(pretty_meeting_details);
+        } catch (parseErr) {
+          console.error('Skipping malformed meeting record', keys[i], parseErr.message);
+        }
       }
     });
 
@@ -514,9 +590,14 @@ router.get('/edit/:meetingId', requireAuth, async (req, res) => {
       console.log("timeMarker primaryColor:", meeting.config.timeMarker.primaryColor);
       console.log("==========================================");
 
+      // Normalize fields the editor binds to directly
+      meeting.default_view = normalizeView(meeting.default_view) || 'overlay';
+      meeting.is_public = meeting.is_public === true || meeting.is_public === 'on';
+
       res.render('edit_meeting',{
         id: meeting_id,
         all_timezones: momentTZ.tz.names(),
+        view_modes: VIEW_MODES,
         meeting: meeting
       });
     } catch (err) {
@@ -526,25 +607,31 @@ router.get('/edit/:meetingId', requireAuth, async (req, res) => {
 });
 
 
-router.get('/:meetingId', requireAuth, async (req, res) => {
+// Public meetings render without login so shared links just work; private
+// meetings still require authentication (logged-out visitors are sent to login).
+router.get('/:meetingId', optionalAuth, async (req, res) => {
     const meeting_id = req.params.meetingId;
-    const userEmail = getUserEmail(req);
-    const meeting_id_for_redis = getUserMeetingKey(userEmail, meeting_id);
+    const userEmail = getUserEmail(req); // null when logged out
     const public_meeting_key = getPublicMeetingKey(meeting_id);
     console.log("~~ GET /meetingId REQUEST ID: " + meeting_id + " for user: " + userEmail);
 
     try {
       await ensureRedisConnection();
-      
-      // 1. First try to get user's private meeting
-      let redis_data = await client.get(meeting_id_for_redis);
+
+      let redis_data = null;
       let meeting = null;
       let isPublicAccess = false;
-      
-      if (redis_data) {
-        meeting = JSON.parse(redis_data);
-      } else {
-        // 2. If not found, try to get public meeting
+
+      // 1. Logged-in users get their private copy first
+      if (userEmail) {
+        redis_data = await client.get(getUserMeetingKey(userEmail, meeting_id));
+        if (redis_data) {
+          meeting = JSON.parse(redis_data);
+        }
+      }
+
+      // 2. Fall back to the public copy (works logged out)
+      if (!meeting) {
         redis_data = await client.get(public_meeting_key);
         if (redis_data) {
           meeting = JSON.parse(redis_data);
@@ -552,8 +639,13 @@ router.get('/:meetingId', requireAuth, async (req, res) => {
         }
       }
 
-      // 3. If still no meeting found, show not found page
+      // 3. No meeting found: logged-out visitors may just need to log in to
+      // see a private meeting; logged-in users get a proper 404
       if (!meeting) {
+        if (!userEmail) {
+          const encodedReturnTo = encodeURIComponent(req.originalUrl);
+          return res.redirect(`/auth/login?returnTo=${encodedReturnTo}`);
+        }
         return res.status(404).render('meeting_not_found', {
           meetingId: meeting_id,
           userEmail: userEmail
@@ -561,31 +653,38 @@ router.get('/:meetingId', requireAuth, async (req, res) => {
       }
 
       // Parse and pass data into refinement stage
-      data = getDataFromRedis(meeting);
-      
-      // Add metadata for the template
-      data.is_public_access = isPublicAccess;
-      data.is_owner = !isPublicAccess || isUserMeetingOwner(userEmail, meeting_id, meeting);
+      const data = getDataFromRedis(meeting);
 
-      res.render('meeting',{
+      // A private-key hit is ownership by construction; public hits check owner_email
+      const is_owner = !isPublicAccess || isUserMeetingOwner(userEmail, meeting_id, meeting);
+
+      // Resolve the view mode: explicit ?view= wins, then the stored default
+      const view = normalizeView(req.query.view) || data.default_view || 'overlay';
+      // "chrome" = on-page UI (view switcher, help hints). Overlay defaults to
+      // chrome-off since it's designed for OBS capture; ?chrome=0/1 overrides.
+      const preview = req.query.preview === '1';
+      const chrome = preview
+        ? false
+        : (req.query.chrome !== undefined ? req.query.chrome !== '0' : view !== 'overlay');
+      const transparent = req.query.transparent === '1';
+
+      const payload = buildClientPayload(data, {
+        id: meeting_id, view, chrome, preview, transparent, is_owner
+      });
+
+      res.render('meeting_views/' + view, {
         id: meeting_id,
         title: data.title,
-        topics: data.topics,
-        start: data.start,
         background: data.background,
-        movement_rate: data.movement_rate,
-        icon: data.icon,
-        config: data.config || {
-          showDebug: false,
-          showProgressBars: true,
-          showStatusIcons: true,
-          showTimeLabels: true,
-          titleFontSize: 24,
-          blockFontSize: 11,
-          timeLabelFontSize: 10
-        },
-        is_public_access: data.is_public_access || false,
-        is_owner: data.is_owner || true
+        config: data.config,
+        view: view,
+        view_modes: VIEW_MODES,
+        chrome: chrome,
+        preview: preview,
+        transparent: transparent,
+        payload_json: serializePayload(payload),
+        is_public_access: isPublicAccess,
+        is_owner: is_owner
       });
     } catch (err) {
       console.error('Redis error:', err);
@@ -596,37 +695,196 @@ router.get('/:meetingId', requireAuth, async (req, res) => {
 
 
 
+// Cosmetic/config fields copied through as-is after light sanitization.
+// Must cover every field read by getDataFromRedis() and the edit-page
+// config reconstruction so old meetings round-trip unchanged.
+const CONFIG_NUMERIC_FIELDS = [
+  'titleFontSize', 'blockFontSize', 'timeLabelFontSize', 'animationSpeed', 'segmentHeight',
+  'completedAlpha', 'currentAlpha', 'upcomingAlpha',
+  'markerLineWidth', 'markerCircleSize', 'markerHeight', 'markerGlowIntensity',
+  'markerPulseSpeed', 'markerTextSize', 'markerTextBgAlpha'
+];
+const CONFIG_COLOR_FIELDS = [
+  'completedColor', 'currentColor', 'upcomingColor',
+  'markerPrimaryColor', 'markerSecondaryColor', 'markerTextColor', 'markerTextBg'
+];
+const CONFIG_FLAG_FIELDS = [
+  'showDebug', 'showProgressBars', 'showStatusIcons', 'showTimeLabels', 'missionControlTheme',
+  'markerShowGlow', 'markerShowCircle', 'markerShowLine', 'markerTextShowBg'
+];
+const MARKER_STYLES = ['modern', 'classic', 'minimal', 'arrow'];
+
+function asArray(value) {
+  if (value === undefined || value === null) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+// Validates and whitelists a meeting POST body. Returns
+// { ok, errors: {field: message}, meetingData: sanitized flat object }.
+// Only fields that break rendering are hard errors; cosmetic fields that fail
+// validation are silently dropped so defaults apply.
+function validateMeetingPayload(body) {
+  const errors = {};
+  const meetingData = {};
+
+  const title = String(body.title || '').trim();
+  if (!title) {
+    errors.title = 'Title is required';
+  } else if (title.length > 200) {
+    errors.title = 'Title must be 200 characters or fewer';
+  } else {
+    meetingData.title = title;
+  }
+
+  const start_time = String(body.start_time || '').trim();
+  if (!momentTZ(start_time, ['h:mm A', 'hh:mm A', 'H:mm', 'HH:mm'], true).isValid()) {
+    errors.start_time = 'Start time must look like "1:30 PM" or "13:30"';
+  } else {
+    meetingData.start_time = start_time;
+  }
+
+  const timezone = String(body.timezone || '').trim();
+  if (!momentTZ.tz.names().includes(timezone)) {
+    errors.timezone = 'Unknown timezone';
+  } else {
+    meetingData.timezone = timezone;
+  }
+
+  if (body.background !== undefined && body.background !== '') {
+    const background = String(body.background).replace('#', '');
+    if (/^[0-9A-Fa-f]{6}$/.test(background)) {
+      meetingData.background = background;
+    } else {
+      errors.background = 'Background must be a 6-digit hex color';
+    }
+  }
+
+  // Agenda rows arrive as parallel person/topic/duration arrays (or scalars
+  // when there is a single row). Fully empty rows are dropped.
+  const persons = asArray(body.person);
+  const topics = asArray(body.topic);
+  const durations = asArray(body.duration);
+  const rows = [];
+  for (let i = 0; i < Math.max(topics.length, persons.length, durations.length); i++) {
+    const person = String(persons[i] || '').trim();
+    const topic = String(topics[i] || '').trim();
+    const durationRaw = String(durations[i] || '').trim();
+    if (!person && !topic && !durationRaw) continue; // skip blank rows
+
+    const duration = parseInt(durationRaw, 10);
+    if (!topic) {
+      errors['topic_' + i] = 'Agenda item ' + (i + 1) + ' needs a topic';
+    } else if (!Number.isInteger(duration) || duration < 1 || duration > 480) {
+      errors['duration_' + i] = 'Agenda item ' + (i + 1) + ' needs a duration between 1 and 480 minutes';
+    } else {
+      rows.push({ person, topic, duration });
+    }
+  }
+  if (rows.length > 50) {
+    errors.topics = 'A meeting can have at most 50 agenda items';
+  }
+  if (rows.length === 0 && Object.keys(errors).length === 0) {
+    // Slim create form posts no agenda; seed a starter row for the editor
+    rows.push({ person: '', topic: 'Agenda item', duration: 15 });
+  }
+  meetingData.person = rows.map(r => r.person);
+  meetingData.topic = rows.map(r => r.topic);
+  meetingData.duration = rows.map(r => String(r.duration));
+
+  const default_view = normalizeView(body.default_view);
+  if (default_view) meetingData.default_view = default_view;
+
+  if (body.preset !== undefined) {
+    meetingData.preset = String(body.preset).slice(0, 40);
+  }
+  if (body.icon !== undefined) {
+    meetingData.icon = String(body.icon).slice(0, 100);
+  }
+
+  CONFIG_NUMERIC_FIELDS.forEach(field => {
+    if (body[field] === undefined || body[field] === '') return;
+    const num = parseFloat(body[field]);
+    if (Number.isFinite(num)) meetingData[field] = String(num);
+  });
+  CONFIG_COLOR_FIELDS.forEach(field => {
+    if (body[field] === undefined || body[field] === '') return;
+    const color = String(body[field]).replace('#', '');
+    if (/^[0-9A-Fa-f]{6}$/.test(color)) meetingData[field] = color;
+  });
+  CONFIG_FLAG_FIELDS.forEach(field => {
+    if (body[field] === 'on' || body[field] === 'off') meetingData[field] = body[field];
+  });
+  if (MARKER_STYLES.includes(body.markerStyle)) {
+    meetingData.markerStyle = body.markerStyle;
+  }
+  if (body.markerTextFont !== undefined && body.markerTextFont !== '') {
+    meetingData.markerTextFont = String(body.markerTextFont).slice(0, 50);
+  }
+
+  return { ok: Object.keys(errors).length === 0, errors, meetingData };
+}
+
 router.post('/:meetingId', requireAuth, async (req, res) => {
   const meeting_id = req.params.meetingId;
   const userEmail = getUserEmail(req);
+
+  if (!/^[A-Za-z0-9]{1,32}$/.test(meeting_id)) {
+    return res.status(400).send('Invalid meeting id');
+  }
   const meeting_id_for_redis = getUserMeetingKey(userEmail, meeting_id);
-  
+  const public_meeting_key = getPublicMeetingKey(meeting_id);
+
   try {
     await ensureRedisConnection();
-    
-    // Add owner email and public flag to the meeting data
-    const meetingData = {
-      ...req.body,
-      owner_email: userEmail,
-      is_public: req.body.is_public === 'on' || req.body.is_public === true
-    };
-    
+
+    const { ok, errors, meetingData } = validateMeetingPayload(req.body);
+    if (!ok) {
+      if (req.xhr) {
+        return res.status(400).json({ ok: false, errors });
+      }
+      return res.status(400).send('Invalid meeting data: ' + Object.values(errors).join('; '));
+    }
+
+    // The public copy is shared namespace: refuse to touch one that belongs to
+    // someone else (legacy copies without owner_email are treated as unowned).
+    const existing_public_raw = await client.get(public_meeting_key);
+    if (existing_public_raw) {
+      try {
+        const existing_public = JSON.parse(existing_public_raw);
+        if (existing_public.owner_email && existing_public.owner_email !== userEmail) {
+          if (req.xhr) {
+            return res.status(403).json({ ok: false, errors: { meeting: 'This meeting id belongs to someone else' } });
+          }
+          return res.status(403).send('Access denied: this meeting id belongs to someone else');
+        }
+      } catch (parseErr) {
+        console.error('Malformed public meeting record for', meeting_id, parseErr.message);
+      }
+    }
+
+    meetingData.meeting_id = meeting_id;
+    meetingData.owner_email = userEmail;
+    meetingData.is_public = req.body.is_public === 'on' || req.body.is_public === true;
+
     // Always save to user's private space
     await client.set(meeting_id_for_redis, JSON.stringify(meetingData));
-    
-    // If marked as public, also save to public space
+
+    // Mirror to / remove from the public space
     if (meetingData.is_public) {
-      const public_meeting_key = getPublicMeetingKey(meeting_id);
       await client.set(public_meeting_key, JSON.stringify(meetingData));
     } else {
-      // If changing from public to private, remove from public space
-      const public_meeting_key = getPublicMeetingKey(meeting_id);
       await client.del(public_meeting_key);
     }
-    
-    res.redirect("/meeting/" + meeting_id);
+
+    if (req.xhr) {
+      return res.json({ ok: true, is_public: meetingData.is_public });
+    }
+    res.redirect("/meeting/edit/" + meeting_id);
   } catch (err) {
     console.error('Redis error:', err);
+    if (req.xhr) {
+      return res.status(500).json({ ok: false, errors: { server: 'Internal Server Error' } });
+    }
     res.status(500).send('Internal Server Error');
   }
 });

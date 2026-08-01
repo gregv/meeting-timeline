@@ -6,10 +6,11 @@ Allow: /productive-meeting-tips
 Allow: /meeting-agenda-timer
 Allow: /meeting-length-effectiveness
 Allow: /ai-changing-meetings
+Allow: /timed-agenda
+Allow: /obs-setup
 
-# Disallow authenticated user areas
+# Disallow authenticated user areas (auth pages served with X-Robots-Tag: noindex)
 Disallow: /meeting/
-Disallow: /auth/
 
 # Sitemap location
 Sitemap: https://agendaclock.com/sitemap.xml

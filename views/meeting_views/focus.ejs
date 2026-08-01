@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include _head %>
+  <link rel="stylesheet" href="/css/meeting-views.css?v=1">
+</head>
+<body class="mv-body">
+  <div class="focus-title-small"><%= title %></div>
+  <main id="viewRoot" class="focus-root"></main>
+
+  <% include _data_bridge %>
+  <% include _switcher %>
+  <script src="/js/views/focus.js?v=1"></script>
+</body>
+</html>

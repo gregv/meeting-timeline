@@ -40,6 +40,14 @@ router.get('/meeting-introductions-antipattern', (req, res) => {
     res.render('meeting-introductions-antipattern');
 });
 
+router.get('/timed-agenda', (req, res) => {
+    res.render('timed-agenda');
+});
+
+router.get('/obs-setup', (req, res) => {
+    res.render('obs_setup');
+});
+
 // SEO Files
 router.get('/sitemap.xml', (req, res) => {
     res.type('application/xml');

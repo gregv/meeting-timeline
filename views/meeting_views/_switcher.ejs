@@ -1,0 +1,68 @@
+<% if (chrome) { %>
+<style>
+  #viewSwitcher {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    background: rgba(10, 14, 26, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 12px;
+    backdrop-filter: blur(6px);
+    transition: opacity 0.6s ease;
+  }
+  #viewSwitcher a {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  #viewSwitcher a:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+  #viewSwitcher a.active {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    font-weight: 600;
+  }
+  #viewSwitcher .switcher-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 4px;
+  }
+  #viewSwitcher.switcher-faded {
+    opacity: 0;
+    pointer-events: none;
+  }
+</style>
+<nav id="viewSwitcher" aria-label="Timeline view switcher">
+  <%
+    var view_labels = {
+      overlay: '📺 Overlay',
+      liftoff: '🚀 Liftoff',
+      rail: '🚇 Rail',
+      table: '📋 Table',
+      focus: '🎯 Focus',
+      ring: '⭕ Ring'
+    };
+  %>
+  <% view_modes.forEach(function(mode) { %>
+  <a href="/meeting/<%= id %>?view=<%= mode %><%= mode === 'overlay' ? '&chrome=1' : '' %>"
+     class="<%= mode === view ? 'active' : '' %>"><%= view_labels[mode] || mode %></a>
+  <% }) %>
+  <% if (is_owner) { %>
+  <span class="switcher-divider"></span>
+  <a href="/meeting/edit/<%= id %>">✏️ Edit</a>
+  <% } %>
+</nav>
+<script src="/js/view-switcher.js?v=1"></script>
+<% } %>

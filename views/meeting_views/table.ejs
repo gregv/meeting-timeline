@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include _head %>
+  <link rel="stylesheet" href="/css/meeting-views.css?v=1">
+</head>
+<body class="mv-body">
+  <header class="mv-header">
+    <div class="mv-header-left">
+      <h1 class="mv-title"><%= title %></h1>
+      <div class="mv-subtitle" id="mvSubtitle"></div>
+    </div>
+    <div class="mv-header-right">
+      <div class="mv-phase" id="mvPhase">STANDBY</div>
+      <div class="mv-clock" id="mvClock">--:--:--</div>
+    </div>
+  </header>
+  <main id="viewRoot" class="table-root"></main>
+
+  <% include _data_bridge %>
+  <% include _switcher %>
+  <script src="/js/views/table.js?v=1"></script>
+</body>
+</html>

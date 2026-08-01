@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <% include _head %>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/8.4.1/pixi.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js"></script>
+</head>
+<body style="margin: 0; padding: 0; background-color: <%= transparent ? 'transparent' : '#' + background %>; overflow: hidden;">
+
+  <% if (chrome) { %>
+  <!-- Modern scroll-based zoom controls with auto-hide and dismiss -->
+  <div id="zoomHelp" style="position: absolute; top: 10px; right: 10px; z-index: 1000; background: rgba(0,0,0,0.7); color: white; padding: 8px 12px; border-radius: 4px; font-family: monospace; font-size: 11px; opacity: 0.8; transition: opacity 1s ease-out; cursor: pointer;">
+    🖱️ Scroll to zoom • Double-click to reset • R to reset
+    <span id="dismissHelp" style="margin-left: 8px; opacity: 0.6; font-size: 10px;">✕</span>
+  </div>
+  <% } %>
+
+  <div id="debug" style="position: fixed; top: 10px; left: 10px; z-index: 2000; background: rgba(0,0,0,0.9); color: white; padding: 10px; font-family: monospace; font-size: 11px; max-width: 400px; max-height: 300px; overflow-y: auto; border: 1px solid #333; border-radius: 4px; display: <%= config.showDebug ? 'block' : 'none' %>;">
+    <div style="font-weight: bold; margin-bottom: 5px;">🐛 Debug Info:</div>
+    <div id="debugContent" style="line-height: 1.2;"></div>
+  </div>
+
+  <% include _data_bridge %>
+  <% include _switcher %>
+
+  <script src="/js/views/overlay.js?v=1"></script>
+</body>
+</html>

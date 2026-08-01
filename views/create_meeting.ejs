@@ -114,99 +114,23 @@
               </div>
             </div>
 
-            <div class="col-md-5">
-              <label for="background" class="form-label">Background Color</label>
-              <button class="btn btn-lg" id="color_display" type="button" style="background-color:#0047bb"></button>
-              <input type="text" id="background" name="background" class="form-control" value="#0047BB" required/>
-              <div class="invalid-feedback">
-                Please select a valid background color.
-              </div>
-            </div>
-
-
             <div class="col-12">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="is_public" id="is_public">
-                <label class="form-check-label" for="is_public">
-                  <strong>Make this meeting publicly shareable</strong><br>
-                  <small class="text-muted">Anyone with the meeting ID can view this timeline after logging in. Only you can edit it.</small>
+              <div class="custom-control custom-switch">
+                <input class="custom-control-input" type="checkbox" name="is_public" id="is_public" checked>
+                <label class="custom-control-label" for="is_public">
+                  <strong>🌐 Public link</strong><br>
+                  <small class="text-muted">Anyone with the link can view this timeline — no login needed.
+                  Required for sharing with attendees and for OBS. Only you can edit.</small>
                 </label>
               </div>
             </div>
 
           </div>
 
-
           <hr class="my-4">
 
-          <h4 class="mb-3">Meeting Agenda</h4>
-          <h6 class="text-muted">Specify who is speaking, about what, and for how long</h6>
-
-
-          <div class="row gy-3">
-
-            <div class="col-md-4">
-              <label for="person1" class="form-label">Person</label>
-              <input type="text" class="form-control" id="person1" placeholder="Pam" required>
-
-              <div class="invalid-feedback">
-                Person is required
-              </div>
-            </div>
-
-            <div class="col-md-5">
-              <label for="topic1" class="form-label">Topic</label>
-              <input type="text" class="form-control" id="topic1" placeholder="Pamb with a b?" required>
-              <div class="invalid-feedback">
-                Topic is required
-              </div>
-            </div>
-
-            <div class="col-md-2">
-              <label for="duration1" class="form-label">Duration</label>
-              <input type="number" class="form-control" id="duration1" placeholder="5" required>
-              <div class="invalid-feedback">
-                Duration required
-              </div>
-            </div>
-
-            <div class="col-md-12">
-              <button id="add" class="btn btn-primary add-more" type="button">Add</button>
-            </div>
-
-          </div>
-
-          <hr class="my-4">
-
-
-          <!-- This is where the Javascript code in create_meeting.js will add new form elements when someone clicks the "Add" button -->
-          <ul class="list-group" id="demo1">
-            <template id="meetingItemTemplate">
-              <li class="list-group-item" name="field" type="text">
-                <div class="input-group mb-2 mr-sm-2">
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Person</div>
-                  </div>
-                  <input type="text" class="form-control col-sm-2" name="person" value="{person}">
-
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Topic</div>
-                  </div>
-                  <input type="text" class="form-control" name="topic" value="{topic}">
-
-                  <div class="input-group-prepend">
-                    <div class="input-group-text">Duration</div>
-                  </div>
-                  <input type="number" class="form-control col-md-2" name="duration" value="{duration}">
-
-                  <button class="btn btn-outline-secondary remove-me" type="button"><img src="/images/trash.svg"/></button>
-                </div>
-              </li>
-            </template>
-
-          </ul>
-
-          <button class="w-100 btn btn-primary btn-lg" type="submit">Generate My Meeting Timeline!</button>
+          <p class="text-muted mb-2">Next you'll add your agenda in the editor, with a live preview and a shareable link.</p>
+          <button class="w-100 btn btn-primary btn-lg" type="submit">Create meeting → open the editor</button>
         </form>
       </div>
     </div>
@@ -241,5 +165,4 @@
   </script>
 
   </body>
-</html>
 </html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timed Agenda Templates & Time-Boxing Guide | AgendaClock</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="What a timed agenda is, why it keeps meetings on track, and free templates with time slots for 30 and 60 minute meetings. Plus a free tool that runs the countdown for you.">
+    <meta name="keywords" content="timed agenda, timed agenda template, meeting agenda with time slots, agenda time allocation, time-boxed agenda, agenda time, meeting time slots">
+    <meta name="author" content="AgendaClock">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://agendaclock.com/timed-agenda">
+    <meta property="og:title" content="Timed Agenda Templates & Time-Boxing Guide">
+    <meta property="og:description" content="What a timed agenda is, why it keeps meetings on track, and free templates with time slots for 30 and 60 minute meetings.">
+    <meta property="og:image" content="https://cdn.ohack.dev/agendaclock/6_squares_in_a_zoom_call_where.jpeg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://agendaclock.com/timed-agenda">
+    <meta property="twitter:title" content="Timed Agenda Templates & Time-Boxing Guide">
+    <meta property="twitter:description" content="What a timed agenda is, why it keeps meetings on track, and free templates with time slots for 30 and 60 minute meetings.">
+    <meta property="twitter:image" content="https://cdn.ohack.dev/agendaclock/6_squares_in_a_zoom_call_where.jpeg">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://agendaclock.com/timed-agenda">
+
+    <!-- Favicon links -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="shortcut icon" href="/favicon-32x32.png">
+
+    <% include partials/analytics %>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    [
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Timed Agenda Templates & Time-Boxing Guide",
+        "description": "What a timed agenda is, why it keeps meetings on track, and free templates with time slots for 30 and 60 minute meetings.",
+        "datePublished": "2026-07-31",
+        "dateModified": "2026-07-31",
+        "author": {
+            "@type": "Organization",
+            "name": "AgendaClock"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "AgendaClock",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://cdn.ohack.dev/agendaclock/agendaclock_logo.jpeg"
+            }
+        },
+        "mainEntityOfPage": "https://agendaclock.com/timed-agenda"
+    },
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "What is a timed agenda?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "A timed agenda is a meeting agenda where every topic has a specific time slot — a start time and a duration — instead of just a list of discussion points. Example: 2:00-2:05 check-in, 2:05-2:20 project update, 2:20-2:28 decisions, 2:28-2:30 action items. The time allocations force prioritization before the meeting and keep discussion on track during it."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "How do I add time slots to a meeting agenda?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Start from your meeting's end time and work backward. List the topics, decide what each one needs to produce (a decision, an update, a plan), then assign minutes based on that output — not on how much people like to talk about it. Give decisions more time than status updates, put the most important topic first, and reserve the last 2-5 minutes for action items."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "What is the difference between a timed agenda and a regular agenda?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "A regular agenda lists what will be discussed. A timed agenda also says for how long. That single addition changes behavior: topics get prioritized in advance, discussions self-regulate when time remaining is visible, and the meeting ends on time because overruns are caught at the topic level instead of at the end."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "How strictly should I enforce agenda time slots?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Treat the timer as a checkpoint, not a guillotine. When a topic hits its limit, make an explicit decision: extend it by borrowing time from a lower-priority item, or park it in a parking lot for follow-up. What you should never do is drift past the limit silently — that trains everyone to ignore the agenda."
+                }
+            }
+        ]
+    }
+    ]
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+            margin: 0;
+            padding: 20px 0;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .hero {
+            background: linear-gradient(rgba(26, 115, 232, 0.9), rgba(13, 71, 161, 0.9)),
+                        url('https://cdn.ohack.dev/agendaclock/6_squares_in_a_zoom_call_where.jpeg');
+            background-size: cover;
+            background-position: center;
+            padding: 60px 40px;
+            color: white;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.8em;
+            margin: 0 0 20px 0;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.3em;
+            margin: 0 0 30px 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .hero-cta {
+            background: #fff;
+            color: #1a73e8;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+
+        .hero-cta:hover {
+            background: #f0f0f0;
+        }
+
+        .content {
+            padding: 50px 40px;
+        }
+
+        .content h2 {
+            color: #1a73e8;
+            font-size: 2em;
+            margin: 40px 0 20px 0;
+            border-bottom: 3px solid #0d47a1;
+            padding-bottom: 10px;
+        }
+
+        .content h3 {
+            color: #333;
+            font-size: 1.4em;
+            margin: 30px 0 15px 0;
+        }
+
+        .content p {
+            color: #555;
+            margin: 15px 0;
+            font-size: 1.1em;
+        }
+
+        .content li {
+            color: #555;
+            font-size: 1.05em;
+            margin: 8px 0;
+        }
+
+        .agenda-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 1em;
+        }
+
+        .agenda-table th {
+            background: #1a73e8;
+            color: white;
+            text-align: left;
+            padding: 12px 15px;
+        }
+
+        .agenda-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #555;
+        }
+
+        .agenda-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .agenda-table .time-col {
+            white-space: nowrap;
+            font-weight: 600;
+            color: #1a73e8;
+        }
+
+        .quote-block {
+            background: #f0f4ff;
+            border-left: 4px solid #1a73e8;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #333;
+        }
+
+        .faq-section {
+            margin: 40px 0;
+        }
+
+        .faq-item {
+            background: #f8f9fa;
+            margin: 15px 0;
+            border-radius: 8px;
+            padding: 25px;
+            border-left: 4px solid #1a73e8;
+        }
+
+        .faq-item h3 {
+            color: #1a73e8;
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+
+        .faq-item p {
+            color: #555;
+            margin: 0;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            padding: 40px;
+            margin: 40px 0;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            color: white;
+            border: none;
+            margin: 0 0 20px 0;
+            font-size: 2.2em;
+        }
+
+        .cta-section p {
+            color: white;
+            margin: 15px 0;
+            font-size: 1.2em;
+        }
+
+        .cta-button {
+            background: white;
+            color: #4285f4;
+            padding: 15px 35px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .cta-button:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .footer-nav {
+            background: #f8f9fa;
+            padding: 30px 40px;
+            border-top: 1px solid #eee;
+        }
+
+        .footer-nav h3 {
+            color: #333;
+            margin: 0 0 15px 0;
+        }
+
+        .nav-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .nav-links a {
+            color: #4285f4;
+            text-decoration: none;
+            padding: 8px 0;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .nav-links a:hover {
+            border-bottom-color: #4285f4;
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 40px 20px;
+            }
+
+            .hero h1 {
+                font-size: 2.2em;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .footer-nav {
+                padding: 20px;
+            }
+
+            .agenda-table {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>The Timed Agenda: Give Every Topic a Time Slot</h1>
+            <p>An agenda without times is a wish list. Add time slots and it becomes a plan.</p>
+            <a href="/auth/google" class="hero-cta">Build a Timed Agenda - Free</a>
+        </div>
+
+        <div class="content">
+            <h2>What Is a Timed Agenda?</h2>
+            <p>A timed agenda is a meeting agenda where every topic gets a specific time slot — a start time and a duration — instead of just a bullet point. "Project update" becomes "2:05–2:20 Project update (15 min)". That one change forces the two decisions that make meetings work: what actually matters, and how much of everyone's time it deserves.</p>
+            <p>Without time allocations, the first topic eats 40 of your 60 minutes and the decision you actually scheduled the meeting for gets 5 rushed minutes at the end. With them, overruns are visible per topic, while there's still time to correct course.</p>
+
+            <h2>Timed Agenda Template: 30-Minute Team Meeting</h2>
+            <p>Copy this structure and swap in your topics. The times matter more than the topics — note that the biggest block goes to the decision, not the updates.</p>
+            <table class="agenda-table">
+                <thead>
+                    <tr><th>Time slot</th><th>Duration</th><th>Topic</th><th>Output</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="time-col">0:00 – 0:03</td><td>3 min</td><td>Check-in and agenda review</td><td>Everyone knows the plan</td></tr>
+                    <tr><td class="time-col">0:03 – 0:10</td><td>7 min</td><td>Status updates (blockers only)</td><td>Blockers surfaced</td></tr>
+                    <tr><td class="time-col">0:10 – 0:22</td><td>12 min</td><td>Main decision or discussion</td><td>A decision, made</td></tr>
+                    <tr><td class="time-col">0:22 – 0:27</td><td>5 min</td><td>Open floor / parking lot items</td><td>Nothing left simmering</td></tr>
+                    <tr><td class="time-col">0:27 – 0:30</td><td>3 min</td><td>Action items and owners</td><td>Who does what, by when</td></tr>
+                </tbody>
+            </table>
+
+            <h2>Timed Agenda Template: 60-Minute Planning Meeting</h2>
+            <table class="agenda-table">
+                <thead>
+                    <tr><th>Time slot</th><th>Duration</th><th>Topic</th><th>Output</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td class="time-col">0:00 – 0:05</td><td>5 min</td><td>Goals for this session</td><td>Shared definition of done</td></tr>
+                    <tr><td class="time-col">0:05 – 0:15</td><td>10 min</td><td>Review: what happened last cycle</td><td>Context, not blame</td></tr>
+                    <tr><td class="time-col">0:15 – 0:35</td><td>20 min</td><td>Prioritize the backlog</td><td>Ranked list</td></tr>
+                    <tr><td class="time-col">0:35 – 0:50</td><td>15 min</td><td>Assign work and estimate</td><td>Owners and estimates</td></tr>
+                    <tr><td class="time-col">0:50 – 0:57</td><td>7 min</td><td>Risks and dependencies</td><td>Known unknowns listed</td></tr>
+                    <tr><td class="time-col">0:57 – 1:00</td><td>3 min</td><td>Recap and action items</td><td>Written commitments</td></tr>
+                </tbody>
+            </table>
+
+            <h2>How to Allocate Time to Agenda Items</h2>
+            <ul>
+                <li><strong>Work backward from the end time.</strong> The meeting ends when it ends. Fit topics into that, not the other way around.</li>
+                <li><strong>Budget by output, not by topic size.</strong> A decision needs more time than a status update, even if the update has more slides.</li>
+                <li><strong>Put the most important topic early.</strong> Energy and attention are front-loaded. Don't spend them on housekeeping.</li>
+                <li><strong>Reserve the last 3–5 minutes for action items.</strong> A meeting without written follow-ups is a conversation, not a meeting.</li>
+                <li><strong>Cut anything that's pure broadcast.</strong> If a topic is one person talking and nobody deciding, it's an email.</li>
+            </ul>
+
+            <div class="quote-block">
+                Parkinson's Law: work expands to fill the time available for its completion. A timed agenda is how you shrink the container. See the data on <a href="/meeting-length-effectiveness" style="color: #1a73e8;">how long meetings should actually be</a>.
+            </div>
+
+            <h2>A Timed Agenda Only Works If Everyone Can See It</h2>
+            <p>Here's where most timed agendas die: they live in a calendar invite nobody reopens once the meeting starts. The facilitator becomes the human timer, awkwardly interrupting people — which is exactly the job nobody wants.</p>
+            <p>The fix is making the clock visible to the whole room. AgendaClock turns your timed agenda into a live visual timeline with a <a href="/meeting-agenda-timer" style="color: #1a73e8;">countdown timer for each topic</a>. Share it in your video call, or <a href="/obs-setup" style="color: #1a73e8;">overlay it on your camera feed with OBS</a> so the agenda rides along in your video. When everyone can see the time remaining, people self-regulate — you never have to be the one who cuts someone off. That also helps with <a href="/managing-talkative-participants" style="color: #1a73e8;">participants who talk too much</a>.</p>
+
+            <div class="faq-section">
+                <h2>Frequently Asked Questions</h2>
+
+                <div class="faq-item">
+                    <h3>What is a timed agenda?</h3>
+                    <p>A meeting agenda where every topic has a start time and duration instead of just a bullet point. The time allocations force prioritization before the meeting and keep discussion on track during it.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>How do I add time slots to a meeting agenda?</h3>
+                    <p>Work backward from the end time. List the topics, decide what each one needs to produce (a decision, an update, a plan), then assign minutes based on that output. Decisions get more time than status updates, the most important topic goes first, and the last few minutes are reserved for action items.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>What's the difference between a timed agenda and a regular agenda?</h3>
+                    <p>A regular agenda lists what will be discussed. A timed agenda also says for how long. Topics get prioritized in advance, discussions self-regulate when time remaining is visible, and overruns get caught at the topic level instead of at the end of the meeting.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>How strictly should I enforce the time slots?</h3>
+                    <p>Treat the timer as a checkpoint, not a guillotine. When a topic hits its limit, decide explicitly: extend it by borrowing from a lower-priority item, or park it for follow-up. Never drift past the limit silently — that trains everyone to ignore the agenda.</p>
+                </div>
+            </div>
+
+            <div class="cta-section">
+                <h2>Turn Your Agenda Into a Live Timeline</h2>
+                <p>Build a timed agenda in about 2 minutes. Free, no ads, no credit card — the countdown runs itself.</p>
+                <a href="/auth/google" class="cta-button">Get Started Free</a>
+            </div>
+        </div>
+
+        <div class="footer-nav">
+            <h3>More Meeting Resources</h3>
+            <div class="nav-links">
+                <a href="/meeting-agenda-timer">Free Meeting Agenda Timer</a>
+                <a href="/meeting-length-effectiveness">How Long Should a Meeting Be?</a>
+                <a href="/managing-talkative-participants">Managing Talkative Participants</a>
+                <a href="/effective-meetings">How to Have More Effective Meetings</a>
+                <a href="/productive-meeting-tips">15 Productive Meeting Tips</a>
+                <a href="/ai-changing-meetings">How AI Is Changing Meetings</a>
+                <a href="/obs-setup">OBS Overlay Setup Guide</a>
+                <a href="/">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

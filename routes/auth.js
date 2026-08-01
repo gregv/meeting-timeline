@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 
+// Auth pages must never appear in search results (robots.txt no longer
+// blocks /auth/ so crawlers can see this header and drop stale entries)
+router.use((req, res, next) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  next();
+});
+
 // Login page
 router.get('/login', (req, res) => {
   if (req.isAuthenticated()) {

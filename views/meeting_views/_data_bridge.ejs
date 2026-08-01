@@ -1,0 +1,6 @@
+<script>
+  // Normalized server-computed meeting payload consumed by the time engine
+  // and the view renderer. All times are ISO 8601 strings.
+  window.MEETING = <%- payload_json %>;
+</script>
+<script src="/js/meeting-time-engine.js?v=1"></script>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Setup Guide - Overlay Your Meeting Agenda on Video | AgendaClock</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Step-by-step guide to overlaying your AgendaClock meeting timeline on your webcam with OBS Studio and Virtual Camera — works in Zoom, Google Meet, and Microsoft Teams.">
+    <meta name="keywords" content="OBS overlay, meeting agenda overlay, OBS virtual camera, chroma key, browser source, Zoom overlay, meeting timer overlay">
+    <meta name="author" content="AgendaClock">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://agendaclock.com/obs-setup">
+
+    <!-- Favicon links -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
+    <% include partials/analytics %>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.65;
+            color: #212529;
+            background: #f8f9fa;
+        }
+        .hero {
+            background: linear-gradient(135deg, #0047BB 0%, #002d77 100%);
+            color: #fff;
+            padding: 48px 20px;
+            text-align: center;
+        }
+        .hero h1 { font-size: 2rem; margin-bottom: 10px; }
+        .hero p { max-width: 640px; margin: 0 auto; opacity: 0.9; }
+        .wrap { max-width: 820px; margin: 0 auto; padding: 32px 20px 64px; }
+        .step {
+            background: #fff;
+            border: 1px solid #e3e7ee;
+            border-radius: 10px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+        }
+        .step h2 { font-size: 1.25rem; margin-bottom: 10px; }
+        .step h3 { font-size: 1.05rem; margin: 16px 0 8px; }
+        .step ol, .step ul { padding-left: 22px; margin: 8px 0; }
+        .step li { margin-bottom: 6px; }
+        .step img {
+            max-width: 100%;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        code {
+            background: #eef1f5;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        .badge-path {
+            display: inline-block;
+            background: #e7f1ff;
+            color: #0047BB;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border-radius: 999px;
+            padding: 3px 12px;
+            margin-bottom: 8px;
+        }
+        .tip {
+            background: #fff8e6;
+            border-left: 4px solid #ffc107;
+            padding: 10px 14px;
+            border-radius: 0 6px 6px 0;
+            margin: 12px 0;
+            font-size: 0.95rem;
+        }
+        .cta {
+            text-align: center;
+            margin-top: 28px;
+        }
+        .cta a {
+            display: inline-block;
+            background: #0047BB;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 28px;
+            border-radius: 8px;
+        }
+        table.trouble { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        table.trouble th, table.trouble td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e3e7ee; vertical-align: top; }
+        table.trouble th { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6c757d; }
+        a { color: #0047BB; }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>🎥 Overlay Your Agenda on Video with OBS</h1>
+        <p>Put your AgendaClock timeline right on top of your webcam feed, so everyone in your Zoom, Meet, or Teams call sees the meeting progress live — no screen sharing needed.</p>
+    </div>
+
+    <div class="wrap">
+        <div class="step">
+            <h2>What you're building</h2>
+            <p>OBS Studio composites your webcam and your meeting timeline into one video feed, then exposes it as a <strong>virtual camera</strong>. In your meeting app you simply pick "OBS Virtual Camera" instead of your webcam. Your agenda stays on screen for the entire call, quietly keeping everyone on time.</p>
+            <ul>
+                <li><a href="https://obsproject.com/" target="_blank" rel="noopener">Download OBS Studio</a> (free, Windows/macOS/Linux)</li>
+                <li>Your meeting must be marked <strong>Public link</strong> in the editor — OBS loads the page without a login.</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <span class="badge-path">Recommended · No chroma key needed</span>
+            <h2>Path 1: Browser Source with a transparent background</h2>
+            <ol>
+                <li>In OBS, create a Scene and add a <strong>Video Capture Device</strong> source — that's your webcam.</li>
+                <li>Add a <strong>Browser</strong> source <em>above</em> the webcam in the Sources list.</li>
+                <li>In the editor's Share panel, click <strong>🎥 Copy OBS URL</strong> and paste it as the URL. It looks like:<br>
+                    <code>https://agendaclock.com/meeting/&lt;your-id&gt;?view=overlay&amp;chrome=0&amp;transparent=1</code></li>
+                <li>Set <strong>Width 1920, Height 1080</strong> (or your canvas size).</li>
+                <li>Done — <code>transparent=1</code> renders the page with a real alpha channel, so your camera shows through automatically. No filters required.</li>
+            </ol>
+            <div class="tip">💡 The <code>chrome=0</code> part hides on-screen hints and the view switcher so only the timeline is drawn.</div>
+        </div>
+
+        <div class="step">
+            <span class="badge-path">Alternative · Window capture</span>
+            <h2>Path 2: Window Capture + Chroma Key</h2>
+            <p>If you'd rather show a normal browser window (or you're on a setup where the Browser source is unavailable):</p>
+            <ol>
+                <li>Open your timeline in a browser window: <code>…/meeting/&lt;your-id&gt;?view=overlay&amp;chrome=0</code>. The background is a solid blue <strong>#0047BB</strong> — that's intentional.</li>
+                <li>In OBS add a <strong>Window Capture</strong> source above your webcam and pick that browser window.</li>
+                <li>Right-click the source → <strong>Filters</strong> → add <strong>Chroma Key</strong>.</li>
+                <img src="/images/obs/01_obs_setup_filters.png" alt="Adding a Chroma Key filter to a source in OBS" loading="lazy">
+                <li>Set <em>Key Color Type</em> to <strong>Blue</strong> (or Custom → <code>#0047BB</code>) and tune <em>Similarity</em> until the blue disappears cleanly.</li>
+                <img src="/images/obs/02_obs_setup_blue_chroma_key.png" alt="Chroma key settings using the blue background" loading="lazy">
+            </ol>
+        </div>
+
+        <div class="step">
+            <h2>Go live: Start the Virtual Camera</h2>
+            <ol>
+                <li>In OBS click <strong>Start Virtual Camera</strong> (bottom-right, under Controls).</li>
+                <img src="/images/obs/02_start_virtal_cam.png" alt="Start Virtual Camera button in OBS" loading="lazy">
+                <li>In Zoom / Google Meet / Microsoft Teams, open the camera picker and select <strong>OBS Virtual Camera</strong>.</li>
+                <img src="/images/obs/03_teams_setup.png" alt="Selecting OBS Virtual Camera in Microsoft Teams" loading="lazy">
+            </ol>
+            <div class="tip">⚠️ On macOS, Microsoft Teams occasionally doesn't list virtual cameras due to code-signing restrictions. See the <a href="https://obsproject.com/forum/threads/obs-virtual-camera-not-showing-up-in-macos-apps.139783/" target="_blank" rel="noopener">OBS forum thread</a> for the current workaround.</div>
+        </div>
+
+        <div class="step">
+            <h2>Troubleshooting</h2>
+            <table class="trouble">
+                <tr><th>Symptom</th><th>Fix</th></tr>
+                <tr>
+                    <td>Blue box instead of transparency</td>
+                    <td>Meeting isn't <strong>Public</strong> (OBS sees the login page), or you're missing <code>transparent=1</code> / the Chroma Key filter. In Path 2, raise the filter's <em>Similarity</em>.</td>
+                </tr>
+                <tr>
+                    <td>Agenda is stale after editing</td>
+                    <td>Right-click the Browser source → <em>Refresh cache of current page</em>, or toggle it off/on.</td>
+                </tr>
+                <tr>
+                    <td>Help text or buttons visible on the overlay</td>
+                    <td>Make sure the URL includes <code>chrome=0</code>.</td>
+                </tr>
+                <tr>
+                    <td>Overlay too small / off-center</td>
+                    <td>Set the Browser source to your canvas resolution (usually 1920×1080), then right-click → <em>Transform</em> → <em>Fit to screen</em>.</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="cta">
+            <a href="/">🚀 Create your meeting timeline — it's free</a>
+        </div>
+
+        <p style="text-align: center; margin-top: 24px; color: #6c757d;">
+            More resources: <a href="/meeting-agenda-timer">free meeting agenda timer</a> ·
+            <a href="/timed-agenda">timed agenda templates</a> ·
+            <a href="/meeting-length-effectiveness">how long should a meeting be?</a>
+        </p>
+    </div>
+</body>
+</html>

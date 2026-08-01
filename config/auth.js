@@ -57,6 +57,11 @@ const requireAuth = (req, res, next) => {
   res.redirect('/auth/login');
 };
 
+// Optional authentication: passport.session() already ran globally, so req.user
+// is populated when a session exists. This middleware exists to make
+// "public + personalized when logged in" routes explicit and greppable.
+const optionalAuth = (req, res, next) => next();
+
 // Get user email for Redis key prefixing
 const getUserEmail = (req) => {
   return req.user ? req.user.email : null;
@@ -84,6 +89,7 @@ const isUserMeetingOwner = (userEmail, meetingId, meetingData) => {
 module.exports = {
   passport,
   requireAuth,
+  optionalAuth,
   getUserEmail,
   getUserMeetingKey,
   getPublicMeetingKey,

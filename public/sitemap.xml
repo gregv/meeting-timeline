@@ -22,7 +22,7 @@
 
     <url>
         <loc>https://agendaclock.com/managing-talkative-participants</loc>
-        <lastmod>2026-04-05</lastmod>
+        <lastmod>2026-07-31</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
     </url>
@@ -36,14 +36,14 @@
 
     <url>
         <loc>https://agendaclock.com/meeting-agenda-timer</loc>
-        <lastmod>2026-04-05</lastmod>
+        <lastmod>2026-07-31</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
     </url>
 
     <url>
         <loc>https://agendaclock.com/meeting-length-effectiveness</loc>
-        <lastmod>2026-04-05</lastmod>
+        <lastmod>2026-07-31</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
     </url>
@@ -58,6 +58,20 @@
     <url>
         <loc>https://agendaclock.com/meeting-introductions-antipattern</loc>
         <lastmod>2026-05-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <url>
+        <loc>https://agendaclock.com/timed-agenda</loc>
+        <lastmod>2026-07-31</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <url>
+        <loc>https://agendaclock.com/obs-setup</loc>
+        <lastmod>2026-07-08</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>
     </url>
